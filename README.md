@@ -239,7 +239,7 @@ See the test files for more usage examples.
 
 ## Important project notes
 
-This project is very new and immature and is bound to have some warts. There are a few know, minor memory leaks that need to be addressed. While node-libssh makes use of both libssh's nonblocking I/O facilities and libuv's socket polling, it's likely that there could be more performance gained from some more async work within the binding code.
+This project is very new and immature and is bound to have some warts. There are a few known, minor memory leaks that need to be addressed. While node-libssh makes use of both libssh's nonblocking I/O facilities and libuv's socket polling, it's likely that there could be more performance gained from some more async work within the binding code.
 
 The streams do not implement back-pressure very well, particularly the read component of channel stream which will just keep on filling up its buffer.
 
