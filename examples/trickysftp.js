@@ -1,72 +1,15 @@
-node-libssh
-===========
+const libssh = require('../')
+    , fs     = require('fs')
 
-A Low-level Node.js binding for [libssh](http://www.libssh.org/)
-----------------------------------------------------------------
+// connect with: sftp -P 3333 localhost
+// do an `ls`, then `get X` one of the files and it should be the same
+// as our 'fileforyou.txt' that we serve up for every request
 
-[![Build Status](https://secure.travis-ci.org/rvagg/node-libssh.png)](http://travis-ci.org/rvagg/node-libssh)
-
-Currently this project is only concerned with a subset of the **server** functionality provided by libssh. The client functionality may be added at a future date (and you're invited to contribute if you want it!).
-
-### Lets make a Node.js SSH server!
-
-```js
 var server = libssh.createServer({
-    hostRsaKeyFile : '/path/to/keys/host_rsa'
-  , hostDsaKeyFile : '/path/to/keys/host_dsa'
+    hostRsaKeyFile : __dirname + '/../test/keys/host_rsa'
+  , hostDsaKeyFile : __dirname + '/../test/keys/host_dsa'
 })
 
-server.on('connection', function (session) {
-  session.on('auth', function (message) {
-    if (message.subtype == 'publikey' &&
-        message.comparePublicKey(fs.readFileSync('/path/to/id_rsa.pub'))) {
-      return message.replyAuthSuccess()
-    }
-    if (message.subtype == 'password' &&
-        message.authUser == '$ecretb@ckdoor' &&
-        message.authPassword == 'nsa') {
-      return message.replyAuthSuccess()
-    }
-    message.replyDefault() // auth failed
-  })
-  session.on('channel', function (channel) {
-    channel.on('end', function () {
-      // current channel ended
-    })
-    channel.on('exec', function (message) {
-      // execute `message.execCommand`
-    })
-    channel.on('subsystem', function (message) {
-      // `message.subsystem` tells you what's requested
-      // could be 'sftp'
-    })
-    channel.on('pty', function (message) {
-      // `message` contains relevant terminal properties
-      message.replySuccess()
-    })
-    channel.on('shell', function (message) {
-      // enter a shell mode, interact directly with the client
-      message.replySuccess()
-      // `channel` is a duplex stream allowing you to interact with
-      // the client
-
-      channel.write('Welcome to my party!\n')
-      // lets do a console chat via ssh!
-      process.stdin                  // take stdin and pipe it to the channel
-        .pipe(channel.pipe(channel)) // pipe the channel to itself for an echo
-        .pipe(process.stdout)        // pipe the channel to stdout
-    })
-  })
-})
-
-server.listen(3333)
-```
-
-See *[stdiopipe.js](https://github.com/rvagg/node-libssh/blob/master/examples/stdiopipe.js)* in the examples directory if you want to try this out.
-
-### How about some SFTP goodness?
-
-```js
 server.on('connection', function (session) {
   session.on('auth', function (message) {
     // we're just going to let everyone in to this party!
@@ -203,61 +146,6 @@ server.on('connection', function (session) {
     })
   })
 })
-```
 
-See *[trickysftp.js](https://github.com/rvagg/node-libssh/blob/master/examples/stdiopipe.js)* in the examples directory if you want to try this out.
-
-SFTP events include:
-
- * sftp:open
- * sftp:close
- * sftp:read
- * sftp:write
- * sftp:lstat
- * sftp:fstat
- * sftp:setstat
- * sftp:fsetstat
- * sftp:opendir
- * sftp:readdir
- * sftp:remove
- * sftp:mkdir
- * sftp:rmdir
- * sftp:realpath
- * sftp:stat
- * sftp:rename
- * sftp:readlink
- * sftp:symlink
-
-
-See the test files for more usage examples.
-
-## Important project notes
-
-This project is very new and immature and is bound to have some warts. There are a few know, minor memory leaks that need to be addressed. While node-libssh makes use of both libssh's nonblocking I/O facilities and libuv's socket polling, it's likely that there could be more performance gained from some more async work within the binding code.
-
-The streams do not implement back-pressure very well, particularly the read component of channel stream which will just keep on filling up its buffer.
-
-Please file issues if you have any questions or concerns or want to see a particular area focused on for development&mdash;just don't expect me to be able to justify time developing or fixing your own pet features, contributions would be greatly appreciated no matter how much of a n00b you feel.
-
-If you want to see more of what's going on, you can send a `debug:true` option when you make a new `Server` instance, it'll print out some message details. There's additional debug cruft you can enable in the source but you'll have to dig to find that and it's very noisy.
-
-<a name="contributing"></a>
-Contributing
-------------
-
-node-libssh is an **OPEN Open Source Project**. This means that:
-
-> Individuals making significant and valuable contributions are given commit-access to the project to contribute as they see fit. This project is more like an open wiki than a standard guarded open source project.
-
-See the [CONTRIBUTING.md](https://github.com/rvagg/node-libssh/blob/master/CONTRIBUTING.md) file for more details.
-
-
-<a name="licence"></a>
-Licence &amp; copyright
--------------------
-
-Copyright (c) 2013 Rod Vagg
-
-node-libssh is licensed under an MIT +no-false-attribs license. All rights not explicitly granted in the MIT license are reserved. See the included LICENSE file for more details.
-
-*node-libssh builds on the excellent work of the [libssh](http://www.libssh.org/) team. **libssh** is licensed under the LGPLv2.
+server.listen(3333)
+console.log('Listening on port 3333')
