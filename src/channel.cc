@@ -24,6 +24,7 @@ static int ids = 0;
 
 Channel::Channel () {
   sftp = NULL;
+  sftpinit = false;
   callbacks = NULL;
   closed = false;
   myid = ids++;
@@ -132,21 +133,39 @@ bool Channel::TryRead () {
     return false;
 
   sftp_client_message sftpmessage;
+  bool read = false;
 
   if (sftp) {
-    if (NSSH_DEBUG)
-      std::cout << "sftp=true\n";
-    sftpmessage = sftp_get_client_message(sftp);
-    if (sftpmessage) {
+    while (true) {
+      if (!sftpinit) {
+        int rc = sftp_server_init(sftp);
+        if (rc) {
+          if (NSSH_DEBUG)
+            std::cout << "Error sftp_server_init error " << rc << ": " << sftp_get_error(sftp) << std::endl;
+          return false;
+        } else {
+          sftpinit = true;
+          if (NSSH_DEBUG)
+            std::cout << "sftp_server_init() successful\n";
+        }
+      }
+
       if (NSSH_DEBUG)
-        std::cout << "TryRead sftp Message " << sftpmessage << std::endl;
-      v8::Handle<v8::Object> mess = SftpMessage::NewInstance(session, this, sftpmessage);
-      OnSftpMessage(mess);
-      return true;
+        std::cout << "sftp=true\n";
+
+      sftpmessage = sftp_get_client_message(sftp);
+      if (sftpmessage) {
+        read = true;
+        if (NSSH_DEBUG)
+          std::cout << "TryRead sftp Message " << sftpmessage << std::endl;
+        v8::Handle<v8::Object> mess = SftpMessage::NewInstance(session, this, sftpmessage);
+        OnSftpMessage(mess);
+      } else
+        break;
     }
+    return read;
   }
 
-  bool read = false;
   int len;
   do {
     char buf[1024];

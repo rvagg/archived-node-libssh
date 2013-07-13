@@ -53,6 +53,8 @@ Server::Server (char *port, char *rsaHostKey, char *dsaHostKey) {
     return;
   }
 
+  closed = false;
+
   sshbind = ssh_bind_new();
   ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_RSAKEY, rsaHostKey);
   ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_DSAKEY, dsaHostKey);
@@ -101,10 +103,13 @@ Server::~Server () {
 void Server::Close () {
   if (NSSH_DEBUG)
     std::cerr << "Server::Close()\n";
-  uv_poll_stop(poll_handle);
-  ssh_bind_free(sshbind);
-  delete poll_handle;
-  delete bindCallbacks;
+  if (!closed) {
+    closed = true;
+    uv_poll_stop(poll_handle);
+    ssh_bind_free(sshbind);
+    delete poll_handle;
+    delete bindCallbacks;
+  }
 }
 
 void Server::OnConnection (v8::Handle<v8::Object> session) {

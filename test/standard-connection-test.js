@@ -1,7 +1,10 @@
-const test   = require('tap').test
-    , fs     = require('fs')
-    , bl     = require('bl')
+const test    = require('tap').test
+    , fs      = require('fs')
+    , bl      = require('bl')
     , executeServerTest = require('./execute-server')
+    , md5    = require('./util').md5
+
+    , testfile = __dirname + '/testdata.bin'
 
     , privkey = fs.readFileSync(
         '/home/rvagg/git/node-libssh/test/keys/id_rsa')
@@ -39,7 +42,11 @@ test('test standard pub/privkey connection', function (t) {
     })
     channel.pipe(bl(function (err, data) {
       t.notOk(err, 'no error')
-      t.equal(data.toString(), fs.readFileSync('/etc/passwd').toString(), 'same data!')
+      t.equal(
+          md5(data.slice())
+        , md5(fs.readFileSync(testfile))
+        , 'same data!'
+      )
     }))
   }
 
@@ -47,7 +54,7 @@ test('test standard pub/privkey connection', function (t) {
     connection.shell(function (err, stream) {
       t.notOk(err, 'no error')
       t.ok(stream, 'has stream')
-      fs.createReadStream('/etc/passwd')
+      fs.createReadStream(testfile)
         .pipe(stream)
         .on('close', function () {
           connection.end()
@@ -88,8 +95,7 @@ test('test standard password connection', function (t) {
       t.pass('triggered "shell" event')
       message.replySuccess()
 
-      console.log('piping /etc/passwd to channel')
-      fs.createReadStream('/etc/passwd')
+      fs.createReadStream(testfile)
         .on('close', function () {
           connection.end()
         })
@@ -106,7 +112,11 @@ test('test standard password connection', function (t) {
 
       stream.pipe(bl(function (err, data) {
         t.notOk(err, 'no error')
-        t.equal(data.toString(), fs.readFileSync('/etc/passwd').toString(), 'same data!')
+        t.equal(
+            md5(data.slice())
+          , md5(fs.readFileSync(testfile))
+          , 'same data!'
+        )
       }))
     })
   }

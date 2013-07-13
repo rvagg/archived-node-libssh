@@ -289,14 +289,6 @@ v8::Handle<v8::Value> Message::SftpAccept (const v8::Arguments& args) {
   Message* m = node::ObjectWrap::Unwrap<Message>(args.This());
 
   sftp_session sftp = sftp_server_new(m->session, m->channel->channel);
-  int rc = sftp_server_init(sftp);
-  if (!rc) {
-    if (NSSH_DEBUG)
-      std::cout << "Error sftp_server_init error " << rc << std::endl;
-  } else
-    if (NSSH_DEBUG)
-      std::cout << "sftp_server_init() successful\n";
-
   m->channel->SetSftp(sftp);
 
   return scope.Close(v8::Undefined());

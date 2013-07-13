@@ -52,6 +52,7 @@ class Channel : public node::ObjectWrap {
   void SetupCallbacks (bool includeData);
 
   sftp_session sftp;
+  bool sftpinit;
   ChannelClosedCallback channelClosedCallback;
   void *callbackUserData;
   ssh_session session;

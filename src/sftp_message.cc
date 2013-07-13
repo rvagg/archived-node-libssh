@@ -223,7 +223,7 @@ void SftpMessage::Init () {
   SftpDataSymbol = NODE_PSYMBOL("data");
   SftpFilenameSymbol = NODE_PSYMBOL("filename");
   SftpLongnameSymbol = NODE_PSYMBOL("longname");
-  SftpAttributesSymbol = NODE_PSYMBOL("attributes");
+  SftpAttributesSymbol = NODE_PSYMBOL("attrs");
   SftpTypeSymbol = NODE_PSYMBOL("type");
   SftpRegularSymbol = NODE_PSYMBOL("regular");
   SftpDirectorySymbol = NODE_PSYMBOL("directory");
@@ -461,6 +461,7 @@ static inline uint64_t GetIntegerProperty(
 
 sftp_attributes ObjectToAttributes (v8::Local<v8::Object> attrObject) {
   sftp_attributes attr = new sftp_attributes_struct;
+  attr->flags = 0;
 
   if (HasStringProperty(attrObject, SftpFilenameSymbol)) {
     attr->name = GetStringProperty(attrObject, SftpFilenameSymbol); //TODO: free
@@ -500,14 +501,18 @@ sftp_attributes ObjectToAttributes (v8::Local<v8::Object> attrObject) {
     attr->flags |= SSH_FILEXFER_ATTR_SIZE;
   }
 
-  if (HasIntegerProperty(attrObject, SftpUidSymbol)) {
-    attr->uid = GetIntegerProperty(attrObject, SftpUidSymbol);
+  bool hasUid = HasIntegerProperty(attrObject, SftpUidSymbol);
+  bool hasGid = HasIntegerProperty(attrObject, SftpGidSymbol);
+  if (hasUid || hasGid) {
     attr->flags |= SSH_FILEXFER_ATTR_UIDGID;
-  }
-
-  if (HasIntegerProperty(attrObject, SftpGidSymbol)) {
-    attr->gid = GetIntegerProperty(attrObject, SftpGidSymbol);
-    attr->flags |= SSH_FILEXFER_ATTR_UIDGID;
+    if (hasUid)
+      attr->uid = GetIntegerProperty(attrObject, SftpUidSymbol);
+    else
+      attr->uid = 0;
+    if (hasGid)
+      attr->gid = GetIntegerProperty(attrObject, SftpGidSymbol);
+    else
+      attr->gid = 0;
   }
 
   if (HasStringProperty(attrObject, SftpOwnerSymbol)) {
@@ -520,21 +525,34 @@ sftp_attributes ObjectToAttributes (v8::Local<v8::Object> attrObject) {
     attr->flags |= SSH_FILEXFER_ATTR_OWNERGROUP;
   }
 
-  if (HasIntegerProperty(attrObject, SftpAtimeSymbol)) {
-    attr->atime64 = GetIntegerProperty(attrObject, SftpAtimeSymbol);
-    attr->atime = attr->atime64;
-    attr->flags |= SSH_FILEXFER_ATTR_ACCESSTIME;
-  }
+  bool hasCtime = HasIntegerProperty(attrObject, SftpCtimeSymbol);
+  bool hasMtime = HasIntegerProperty(attrObject, SftpMtimeSymbol);
+  bool hasAtime = HasIntegerProperty(attrObject, SftpAtimeSymbol);
+  if (hasCtime || hasMtime || hasAtime) {
+    attr->flags |= SSH_FILEXFER_ATTR_ACMODTIME;
+    if (hasCtime) {
+      attr->createtime = GetIntegerProperty(attrObject, SftpCtimeSymbol);
+      attr->flags |= SSH_FILEXFER_ATTR_CREATETIME;
+    } else
+      attr->createtime = 0;
 
-  if (HasIntegerProperty(attrObject, SftpCtimeSymbol)) {
-    attr->createtime = GetIntegerProperty(attrObject, SftpCtimeSymbol);
-    attr->flags |= SSH_FILEXFER_ATTR_CREATETIME;
-  }
+    if (hasMtime) {
+      attr->mtime64 = GetIntegerProperty(attrObject, SftpMtimeSymbol);
+      attr->mtime = attr->mtime64;
+      attr->flags |= SSH_FILEXFER_ATTR_MODIFYTIME;
+    } else {
+      attr->mtime = 0;
+      attr->mtime64 = 0;
+    }
 
-  if (HasIntegerProperty(attrObject, SftpMtimeSymbol)) {
-    attr->mtime64 = GetIntegerProperty(attrObject, SftpMtimeSymbol);
-    attr->mtime = attr->mtime64;
-    attr->flags |= SSH_FILEXFER_ATTR_MODIFYTIME;
+    if (HasIntegerProperty(attrObject, SftpAtimeSymbol)) {
+      attr->atime64 = GetIntegerProperty(attrObject, SftpAtimeSymbol);
+      attr->atime = attr->atime64;
+      attr->flags |= SSH_FILEXFER_ATTR_ACCESSTIME;
+    } else {
+      attr->atime = 0;
+      attr->atime64 = 0;
+    }
   }
 
   if (HasIntegerProperty(attrObject, SftpPermissionsSymbol)) {
