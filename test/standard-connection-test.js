@@ -6,10 +6,8 @@ const test    = require('tap').test
 
     , testfile = __dirname + '/testdata.bin'
 
-    , privkey = fs.readFileSync(
-        '/home/rvagg/git/node-libssh/test/keys/id_rsa')
-    , pubkey  = fs.readFileSync(
-        '/home/rvagg/git/node-libssh/test/keys/id_rsa.pub')
+    , privkey = fs.readFileSync(__dirname + '/keys/id_rsa')
+    , pubkey  = fs.readFileSync(__dirname + '/keys/id_rsa.pub')
 
 
 // priv/pub key auth + pipe a file in to the session and verify it got there
