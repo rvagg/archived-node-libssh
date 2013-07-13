@@ -1,5 +1,5 @@
 {
-    "name"            : "libssh"
+    "name"            : "ssh"
   , "description"     : "A Node.js binding for libssh"
   , "contributors"    : [
         "Rod Vagg <r@va.gg> (https://github.com/rvagg)"
@@ -7,7 +7,7 @@
   , "keywords": [
         "ssh", "libssh"
     ]
-  , "version"         : "0.0.0"
+  , "version"         : "1.0.0"
   , "main"            : "index.js"
   , "dependencies"    : {
         "bindings"        : "~1.1.0"

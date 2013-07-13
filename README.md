@@ -8,6 +8,8 @@ A Low-level Node.js binding for [libssh](http://www.libssh.org/)
 
 Currently this project is only concerned with a subset of the **server** functionality provided by libssh. The client functionality may be added at a future date (and you're invited to contribute if you want it!).
 
+You can find it in npm as **ssh**, (version 0.0.1 of which is [substack's version](https://github.com/substack/node-ssh) with an older libssh).
+
 ### Lets make a Node.js SSH server!
 
 ```js
