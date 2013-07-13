@@ -230,8 +230,12 @@ SFTP events include:
  * sftp:readlink
  * sftp:symlink
 
-
 See the test files for more usage examples.
+
+
+### `Stat`
+
+*TODO: document this...*
 
 ## Important project notes
 
