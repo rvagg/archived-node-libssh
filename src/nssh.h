@@ -7,7 +7,8 @@
 #include <node.h>
 //#include <node_buffer.h>
 
-#define NSSH_DEBUG true
+#define NSSH_DEBUG false
+//#define cout cerr
 
 static inline char* FromV8String(v8::Local<v8::Value> from) {
   size_t sz_;

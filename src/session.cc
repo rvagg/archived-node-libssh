@@ -19,7 +19,8 @@ v8::Persistent<v8::String> SessionOnNewChannelSymbol;
 
 void Session::OnError (std::string err) {
   //TODO:
-  std::cerr << "ERROR: " << err << std::endl;
+  if (NSSH_DEBUG)
+    std::cout << "ERROR: " << err << std::endl;
 }
 
 void Session::OnMessage (v8::Handle<v8::Object> message) {
@@ -61,15 +62,23 @@ void Session::ChannelClosedCallback (Channel *channel, void *userData) {
   std::vector<Channel*>::iterator it = s->channels.begin();
   while (it != s->channels.end()) {
     if ((*it)->IsChannel(channel->channel)) {
-      it = s->channels.erase(it);
+      if (NSSH_DEBUG)
+        std::cout << "Removed " << (*it)->myid << std::endl;
+      s->channels.erase(it);
       if (NSSH_DEBUG)
         std::cout << "Found and removed channel from list\n";
+      break;
     }
-    else
-      ++it;
+    it++;
   }
-  if (s->channels.size() == 0)
+
+  /*
+  if (s->channels.size() == 0) {
+    if (NSSH_DEBUG)
+      std::cout << "!!!!!!!!!!!!!!!!!!!! CLOSING, NO MORE CHANNELS !!!!!!!!!!!!!!!!\n";
     s->Close();
+  }
+  */
 }
 
 void Session::SocketPollCallback (uv_poll_t* handle, int status, int events) {
@@ -83,6 +92,9 @@ void Session::SocketPollCallback (uv_poll_t* handle, int status, int events) {
 
   // doesn't suit async handling: ssh_execute_message_callbacks(s->session);
 
+  if (!s->active)
+    return;
+
   ssh_message message;
   int type;
   int subtype;
@@ -94,7 +106,14 @@ void Session::SocketPollCallback (uv_poll_t* handle, int status, int events) {
     message = ssh_message_get(s->session);
 
     if (NSSH_DEBUG)
-      std::cout << "message loop " << (!message) << std::endl;
+      std::cout << "message loop " << (!message) << " status=" << ssh_get_status(s->session) << std::endl;
+
+    //NOTE: this is patched in my local version to check session->session_state
+    if (ssh_get_status(s->session) & SSH_CLOSED_ERROR) {
+      if (NSSH_DEBUG)
+        std::cout << "session status is SSH_CLOSED_ERROR, closing\n";
+      return s->Close();
+    }
 
     if (!message)
       break;
@@ -118,20 +137,28 @@ void Session::SocketPollCallback (uv_poll_t* handle, int status, int events) {
         , s
       );
 
-      s->channels.push_back(
-          node::ObjectWrap::Unwrap<Channel>(channel));
+      s->channels.push_back(node::ObjectWrap::Unwrap<Channel>(channel));
+      if (NSSH_DEBUG)
+        std::cout << "New channel " << node::ObjectWrap::Unwrap<Channel>(channel)->myid << std::endl;
       s->OnNewChannel(channel);
 
       ssh_message_free(message);
     } else {
       if (type == SSH_REQUEST_CHANNEL && subtype) {
-        for (std::vector<Channel*>::iterator it = s->channels.begin()
-              ; it != s->channels.end(); ++it) {
+        if (NSSH_DEBUG)
+          std::cout << "*****************************" << s->channels.size() << " channels\n";
+        std::vector<Channel*>::reverse_iterator it = s->channels.rbegin();
+        while (it != s->channels.rend()) {
+          if (NSSH_DEBUG)
+            std::cout << "*************** IT1 NEXT ************** " << (*it)->myid << std::endl;
           if ((*it)->IsChannel(ssh_message_channel_request_channel(message))) {
             (*it)->OnMessage(Message::NewInstance(s->session, *it, message));
             break;
           }
+          ++it;
         }
+        if (NSSH_DEBUG)
+          std::cout << "*****************************\n";
         ssh_message_free(message);
       } else {
         v8::Handle<v8::Object> mess =
@@ -143,20 +170,27 @@ void Session::SocketPollCallback (uv_poll_t* handle, int status, int events) {
   }
 
   bool channelData = false;
-  for (std::vector<Channel*>::iterator it = s->channels.begin()
-        ; it != s->channels.end(); ++it) {
+  if (NSSH_DEBUG)
+    std::cout << "***************************** " << s->channels.size() << " channels\n";
+  std::vector<Channel*>::reverse_iterator it = s->channels.rbegin();
+  while (it != s->channels.rend()) {
+    if (NSSH_DEBUG)
+      std::cout << "*************** IT2 NEXT ************** " << (*it)->myid << std::endl;
     if ((*it)->TryRead()) {
       channelData = true;
       break;
     }
+    ++it;
   }
+  if (NSSH_DEBUG)
+    std::cout << "*****************************\n";
 
   if (NSSH_DEBUG)
     std::cout << "Channel Data: " << (channelData ? "yes" : "no") << std::endl;
 }
 
 Session::Session () {
-  keysExchanged = true;
+  active = false;
 }
 
 Session::~Session () {
@@ -166,11 +200,14 @@ Session::~Session () {
 }
 
 void Session::Close () {
+  active = false;
   uv_poll_stop(poll_handle);
   //delete poll_handle;
   ssh_set_callbacks(session, 0);
   ssh_set_message_callback(session, 0, 0);
-  ssh_disconnect(session);
+  //TODO: investigate whether this is needed in some way, it doesn't
+  // work when you have data in the pipe when called:
+  //ssh_disconnect(session);
   if (NSSH_DEBUG)
     std::cout << "Stopped polling session, " << channels.size() << " channels open\n";
 }
@@ -188,7 +225,7 @@ void SessionLogCallback (ssh_session session, int priority,
     const char *message, void *userdata) {
 
   if (NSSH_DEBUG)
-    std::cout << "SessionLogCallback: " << priority << ": " << message
+    std::cout << "SessionLogCallback " << priority << message
       << std::endl;
 }
 
@@ -233,12 +270,9 @@ void Session::Start () {
     std::string err("Key exchange error: ");
     err.append(ssh_get_error(session));
     OnError(err);
-  } else {
-    keysExchanged = true;
-    if (NSSH_DEBUG)
-      std::cout << "keysExchanged\n";
   }
 
+  active = true;
   poll_handle = new uv_poll_t;
   uv_os_sock_t socket = ssh_get_fd(session);
   poll_handle->data = this;

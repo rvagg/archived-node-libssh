@@ -36,11 +36,11 @@ class Session : public node::ObjectWrap {
   static void SocketPollCallback (uv_poll_t* handle, int status, int events);
   static void ChannelClosedCallback (Channel *channel, void *user);
 
-  bool keysExchanged;
   ssh_session session;
   uv_poll_t *poll_handle;
   ssh_callbacks_struct *callbacks;
   v8::Persistent<v8::Object> persistentHandle;
+  bool active;
 
   std::vector<Channel*> channels;
 

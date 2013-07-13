@@ -99,6 +99,8 @@ Server::~Server () {
 }
 
 void Server::Close () {
+  if (NSSH_DEBUG)
+    std::cerr << "Server::Close()\n";
   uv_poll_stop(poll_handle);
   ssh_bind_free(sshbind);
   delete poll_handle;

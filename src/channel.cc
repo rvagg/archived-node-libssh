@@ -18,10 +18,17 @@ v8::Persistent<v8::Function> Channel::constructor;
 v8::Persistent<v8::String> ChannelOnMessageSymbol;
 v8::Persistent<v8::String> ChannelOnSftpMessageSymbol;
 v8::Persistent<v8::String> ChannelOnDataSymbol;
+v8::Persistent<v8::String> ChannelOnCloseSymbol;
+
+static int ids = 0;
 
 Channel::Channel () {
   sftp = NULL;
   callbacks = NULL;
+  closed = false;
+  myid = ids++;
+  if (NSSH_DEBUG)
+    std::cout << "Channel::Channel! " << myid << "\n";
 }
 
 Channel::~Channel () {
@@ -59,6 +66,7 @@ void ChannelEofCallback (
   Channel* c = static_cast<Channel*>(userdata);
   if (NSSH_DEBUG)
     std::cout << "ChannelEofCallback!\n";
+  // try one last read!
   c->CloseChannel();
 }
 
@@ -67,10 +75,11 @@ void ChannelCloseCallback (
     , ssh_channel channel
     , void *userdata) {
 
-  Channel* c = static_cast<Channel*>(userdata);
-  c->CloseChannel();
   if (NSSH_DEBUG)
     std::cout << "ChannelCloseCallback!\n";
+  Channel* c = static_cast<Channel*>(userdata);
+  // try one last read!
+  c->CloseChannel();
 }
 
 void ChannelSignalCallback (
@@ -101,15 +110,27 @@ void Channel::SetupCallbacks (bool includeData) {
 }
 
 void Channel::CloseChannel () {
-  if (channelClosedCallback)
-    channelClosedCallback(this, callbackUserData);
-  if (NSSH_DEBUG)
-    std::cout << "ssh_channel_close()\n";
-  ssh_channel_close(channel);
-  ssh_channel_free(channel);
+  if (!closed) {
+    TryRead(); // one last time
+    if (NSSH_DEBUG)
+      std::cout << "CloseChannel, closed = true " << myid << "\n";
+    closed = true;
+    if (NSSH_DEBUG)
+      std::cout << "ssh_channel_close()\n";
+    ssh_channel_close(channel);
+    ssh_channel_free(channel);
+    if (channelClosedCallback)
+      channelClosedCallback(this, callbackUserData);
+    OnClose();
+  }
 }
 
 bool Channel::TryRead () {
+  if (NSSH_DEBUG)
+    std::cout << "TryRead closed=" << (closed ? "true" : "false") << " " << myid << std::endl;
+  if (closed)
+    return false;
+
   sftp_client_message sftpmessage;
 
   if (sftp) {
@@ -125,14 +146,23 @@ bool Channel::TryRead () {
     }
   }
 
-  char buf[1024];
-  int len = ssh_channel_read_nonblocking(channel, buf, sizeof(buf), 0);
-  if (len > 0)
-    OnData(buf, len);
+  bool read = false;
+  int len;
+  do {
+    char buf[1024];
+    len = ssh_channel_read_nonblocking(channel, buf, sizeof(buf), 0);
+    if (len > 0) {
+      read = true;
+      if (NSSH_DEBUG)
+        std::cout << "Read buf = " << std::string(buf, len) << std::endl;
+      OnData(buf, len);
+    } else
+      break;
+  } while (true);
 
   if (NSSH_DEBUG)
     std::cout << "Channel::TryRead len=" << len << std::endl;
-  return len > 0;
+  return read;
 }
 
 bool Channel::IsChannel (ssh_channel channel) {
@@ -193,6 +223,19 @@ void Channel::OnData (const char *data, int length) {
   }
 }
 
+void Channel::OnClose () {
+  v8::HandleScope scope;
+
+  v8::Local<v8::Value> callback = this->handle_->Get(ChannelOnCloseSymbol);
+
+  if (callback->IsFunction()) {
+    v8::TryCatch try_catch;
+    callback.As<v8::Function>()->Call(this->handle_, 0, NULL);
+    if (try_catch.HasCaught())
+      node::FatalException(try_catch);
+  }
+}
+
 void Channel::Init () {
   v8::HandleScope scope;
   v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(New);
@@ -204,6 +247,7 @@ void Channel::Init () {
   node::SetPrototypeMethod(tpl, "sendEof", SendEof);
   constructor = v8::Persistent<v8::Function>::New(tpl->GetFunction());
   ChannelOnDataSymbol = NODE_PSYMBOL("onData");
+  ChannelOnCloseSymbol = NODE_PSYMBOL("onClose");
   ChannelOnMessageSymbol = NODE_PSYMBOL("onMessage");
   ChannelOnSftpMessageSymbol = NODE_PSYMBOL("onSftpMessage");
 }

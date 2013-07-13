@@ -35,11 +35,13 @@ class Channel : public node::ObjectWrap {
   void SetSftp (sftp_session sftp);
 
   ssh_channel channel;
+  int myid;
 
   void OnError (std::string error);
   void OnMessage (v8::Handle<v8::Object> message);
   void OnSftpMessage (v8::Handle<v8::Object> message);
   void OnData (const char *data, int length);
+  void OnClose ();
   bool IsChannel (ssh_channel);
   bool TryRead ();
 
@@ -54,6 +56,7 @@ class Channel : public node::ObjectWrap {
   void *callbackUserData;
   ssh_session session;
   ssh_channel_callbacks_struct *callbacks;
+  bool closed;
 
   NSSH_V8_METHOD( New            )
   NSSH_V8_METHOD( WriteData      )
