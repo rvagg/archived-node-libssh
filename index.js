@@ -1,2 +1,4 @@
-module.exports.createServer = require('./server')
-module.exports.Stat = require('./stat')
+module.exports = {
+    createServer : require('./lib/server')
+  , Stat         : require('./lib/stat')
+}
