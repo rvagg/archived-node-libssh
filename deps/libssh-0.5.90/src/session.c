@@ -573,7 +573,8 @@ int ssh_get_status(ssh_session session) {
   if (socketstate & SSH_WRITE_PENDING) {
       r |= SSH_WRITE_PENDING;
   }
-  if (session->closed && (socketstate & SSH_CLOSED_ERROR)) {
+  if ((session->closed && (socketstate & SSH_CLOSED_ERROR)) ||
+      session->session_state == SSH_SESSION_STATE_ERROR) {
     r |= SSH_CLOSED_ERROR;
   }
 
