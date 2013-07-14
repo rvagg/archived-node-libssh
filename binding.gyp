@@ -3,25 +3,30 @@
         'target_name': 'ssh'
       , 'conditions': [
             ['node_shared_openssl=="false"', {
-              'include_dirs': [
-                '<(node_root_dir)/deps/openssl/openssl/include'
-              ],
-              "conditions" : [
-                ["target_arch=='ia32'", {
-                  "include_dirs": [ "<(node_root_dir)/deps/openssl/config/piii" ]
-                }],
-                ["target_arch=='x64'", {
-                  "include_dirs": [ "<(node_root_dir)/deps/openssl/config/k8" ]
-                }],
-                ["target_arch=='arm'", {
-                  "include_dirs": [ "<(node_root_dir)/deps/openssl/config/arm" ]
-                }]
+                'include_dirs': [
+                  '<(node_root_dir)/deps/openssl/openssl/include'
+                ]
+              , "conditions" : [
+                  ["target_arch=='ia32'", {
+                    "include_dirs": [ "<(node_root_dir)/deps/openssl/config/piii" ]
+                  }],
+                  ["target_arch=='x64'", {
+                    "include_dirs": [ "<(node_root_dir)/deps/openssl/config/k8" ]
+                  }],
+                  ["target_arch=='arm'", {
+                    "include_dirs": [ "<(node_root_dir)/deps/openssl/config/arm" ]
+                  }]
               ]
             }]
-          , ['node_shared_zlib=="false"', {
-              'include_dirs': [
-                '<(node_root_dir)/deps/zlib'
-              ]
+          , ['OS == "linux"', {
+                'libraries': [
+                    '-lssl'
+                  , '-lcrypto'
+                ]
+            }]
+          , ['OS == "solaris"', {
+            }]
+          , ['OS == "mac"', {
             }]
         ]
       , 'dependencies': [
