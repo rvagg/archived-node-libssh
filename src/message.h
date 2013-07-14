@@ -35,8 +35,6 @@ class Message : public node::ObjectWrap {
   ssh_message message;
   ssh_session session;
   Channel *channel;
-  const char *type;
-  const char *subtype;
 
   NSSH_V8_METHOD( New              )
   NSSH_V8_METHOD( ReplyDefault     )

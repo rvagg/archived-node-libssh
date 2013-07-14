@@ -74,17 +74,18 @@ Server::Server (char *port, char *rsaHostKey, char *dsaHostKey) {
 
   if (ssh_bind_listen(sshbind) < 0) {
     //TODO:
-    if (NSSH_DEBUG)
-      std::cout << "ERROR: listening to socket: " << ssh_get_error(sshbind)
+    std::cerr << "ERROR: listening to socket: " << ssh_get_error(sshbind)
         << std::endl;
     ssh_bind_free(sshbind);
+    exit(-1); // eww... fix this
   }
+
+  assert(ssh_bind_get_fd(sshbind) > 0);
 
   bindCallbacks = new ssh_bind_callbacks_struct;
   bindCallbacks->incoming_connection = IncomingConnectionCallback;
   ssh_callbacks_init(bindCallbacks);
   ssh_bind_set_callbacks(sshbind, bindCallbacks, 0);
-
 
   poll_handle = new uv_poll_t;
   uv_os_sock_t socket = ssh_bind_get_fd(sshbind);

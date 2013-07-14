@@ -34,7 +34,6 @@ class SftpMessage : public node::ObjectWrap {
   sftp_client_message message;
   ssh_session session;
   Channel *channel;
-  const char *type;
 
   NSSH_V8_METHOD( New         )
   NSSH_V8_METHOD( ReplyName   )
