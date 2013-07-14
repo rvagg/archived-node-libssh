@@ -4,7 +4,7 @@
         'libsshversion': '0.5.90'
     }
   , 'type': 'static_library'
-		# Overcomes an issue with the linker and thin .a files on SmartOS
+    # Overcomes an issue with the linker and thin .a files on SmartOS
   , 'standalone_static_library': 1
   , 'defines': [
         'SOURCEDIR=<!(pwd)/libssh-<(libsshversion)/'
@@ -20,6 +20,29 @@
           , 'include/'
         ]
     }
+  , 'conditions': [
+        ['node_shared_openssl=="false"', {
+          'include_dirs': [
+            '<(node_root_dir)/deps/openssl/openssl/include'
+          ],
+          "conditions" : [
+            ["target_arch=='ia32'", {
+              "include_dirs": [ "<(node_root_dir)/deps/openssl/config/piii" ]
+            }],
+            ["target_arch=='x64'", {
+              "include_dirs": [ "<(node_root_dir)/deps/openssl/config/k8" ]
+            }],
+            ["target_arch=='arm'", {
+              "include_dirs": [ "<(node_root_dir)/deps/openssl/config/arm" ]
+            }]
+          ]
+        }]
+      , ['node_shared_zlib=="false"', {
+          'include_dirs': [
+            '<(node_root_dir)/deps/zlib'
+          ]
+        }]
+    ]
   , 'sources': [
         'libssh-<(libsshversion)/src/agent.c'
       , 'libssh-<(libsshversion)/src/auth1.c'

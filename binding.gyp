@@ -18,13 +18,14 @@
                 }]
               ]
             }]
+          , ['node_shared_zlib=="false"', {
+              'include_dirs': [
+                '<(node_root_dir)/deps/zlib'
+              ]
+            }]
         ]
       , 'dependencies': [
             '<(module_root_dir)/deps/libssh.gyp:libssh'
-        ]
-      , 'libraries': [
-            '-lssl'
-          , '-lcrypto'
         ]
       , 'sources': [
             'src/nssh.cc'
