@@ -12,12 +12,10 @@
     ]
   , 'include_dirs': [
         'libssh-<(libsshversion)/include/'
-      , 'include/'
     ]
   , 'direct_dependent_settings': {
         'include_dirs': [
             'libssh-<(libsshversion)/include/'
-          , 'include/'
         ]
     }
   , 'conditions': [
@@ -41,7 +39,26 @@
           'include_dirs': [
             '<(node_root_dir)/deps/zlib'
           ]
-        }]
+       }]
+     , ['OS == "mac"', {
+           'include_dirs': [
+               'include-osx/'
+           ]
+         , 'direct_dependent_settings': {
+               'include_dirs': [
+                   'include-osx/'
+               ]
+           }
+       }, { # OS != "mac"
+           'include_dirs': [
+               'include/'
+           ]
+         , 'direct_dependent_settings': {
+               'include_dirs': [
+                   'include/'
+               ]
+           }
+       }]
     ]
   , 'sources': [
         'libssh-<(libsshversion)/src/agent.c'

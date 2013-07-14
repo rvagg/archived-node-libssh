@@ -27,6 +27,10 @@
           , ['OS == "solaris"', {
             }]
           , ['OS == "mac"', {
+                'libraries': [
+                    '-lssl'
+                  , '-lcrypto'
+                ]
             }]
         ]
       , 'dependencies': [
