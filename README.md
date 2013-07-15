@@ -10,7 +10,7 @@ Currently this project is only concerned with a subset of the **server** functio
 
 You can find it in npm as **ssh**, (version 0.0.1 of which is [substack's version](https://github.com/substack/node-ssh) with an older libssh).
 
-[![NPM](http://nodei.co/npm/ssh.png)](http://nodei.co/npm/ssh/)
+[![NPM](https://nodei.co/npm/ssh.png)](https://nodei.co/npm/ssh/)
 
 ### Lets make a Node.js SSH server!
 
