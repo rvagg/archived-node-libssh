@@ -12,7 +12,7 @@ const test    = require('tap').test
 
 // priv/pub key auth + pipe a file in to the session and verify it got there
 test('test standard pub/privkey connection', function (t) {
-  t.plan(executeServerTest.plan + 4)
+  t.plan(executeServerTest.plan + 6)
 
   var connectOptions = {
       host: 'localhost'
@@ -45,6 +45,7 @@ test('test standard pub/privkey connection', function (t) {
         , md5(fs.readFileSync(testfile))
         , 'same data!'
       )
+      channel.end()
     }))
   }
 
@@ -65,7 +66,7 @@ test('test standard pub/privkey connection', function (t) {
 
 // password auth + with stream going the other way
 test('test standard password connection', function (t) {
-  t.plan(executeServerTest.plan + 3)
+  t.plan(executeServerTest.plan + 8)
 
   var connectOptions = {
           host: 'localhost'
@@ -95,9 +96,14 @@ test('test standard password connection', function (t) {
 
       fs.createReadStream(testfile)
         .on('close', function () {
-          connection.end()
+          channel.close()
+          setTimeout(connection.end.bind(connection), 50)
         })
         .pipe(channel)
+      channel.pipe(bl(function (err, data) {
+        t.notOk(err, 'no error')
+        t.equal(data.length, 0, 'got no data on read')
+      }))
     })
   }
 
