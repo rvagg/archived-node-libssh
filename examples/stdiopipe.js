@@ -12,17 +12,23 @@ var server = libssh.createServer({
 
 server.on('connection', function (session) {
   session.on('auth', function (message) {
-    if (message.subtype == 'publickey' &&
-        message.comparePublicKey(fs.readFileSync('/path/to/id_rsa.pub'))) {
+    if (message.subtype == 'publickey'
+        && message.authUser == '$ecretb@ckdoor'
+        && message.comparePublicKey(
+            fs.readFileSync(__dirname + '/../test/keys/id_rsa.pub'))) {
+      // matching keypair, correct user
       return message.replyAuthSuccess()
     }
-    if (message.subtype == 'password' &&
-        message.authUser == '$ecretb@ckdoor' &&
-        message.authPassword == 'nsa') {
+
+    if (message.subtype == 'password'
+        && message.authUser == '$ecretb@ckdoor'
+        && message.authPassword == 'nsa') {
+      // correct user, matching password
       return message.replyAuthSuccess()
     }
     message.replyDefault() // auth failed
   })
+
   session.on('channel', function (channel) {
     channel.on('end', function () {
       // current channel ended

@@ -8,16 +8,16 @@ function executeServerTest (t, connectOptions, authCb, channelCb, connectionCb) 
   })
 
   server.on('connection', function (session) {
-    t.ok(session, 'have a session object!')
+    t.ok(session, '(execute-server) have a session object!')
     session.on('auth', function (message) {
-      t.ok(session, 'have a message object, triggered "auth" event')
+      t.ok(session, '(execute-server) have a message object, triggered "auth" event')
       authCb(message)
     })
     session.on('channel', function (channel) {
-      t.ok(channel, 'have a channel!')
+      t.ok(channel, '(execute-server) have a channel!')
       channelCb(channel, session)
       channel.on('end', function () {
-        t.pass('got "end" event')
+        t.pass('(execute-server) got "end" event')
       })
 
       /*
@@ -45,7 +45,7 @@ function executeServerTest (t, connectOptions, authCb, channelCb, connectionCb) 
     connection.on('close', function () {
       server.close()
       setTimeout(function () {
-        t.pass('closing')
+        t.pass('(execute-server) closing')
         t.end()
       }, 100)
     })
@@ -53,6 +53,6 @@ function executeServerTest (t, connectOptions, authCb, channelCb, connectionCb) 
 
   return server
 }
-executeServerTest.plan = 7
+executeServerTest.plan = 5
 
 module.exports = executeServerTest

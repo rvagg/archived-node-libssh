@@ -16,23 +16,29 @@ You can find it in npm as **ssh**, (version 0.0.1 of which is [substack's versio
 
 ```js
 var server = libssh.createServer({
-    hostRsaKeyFile : '/path/to/keys/host_rsa'
-  , hostDsaKeyFile : '/path/to/keys/host_dsa'
+    hostRsaKeyFile : '/path/to/host_rsa'
+  , hostDsaKeyFile : '/path/to/host_dsa'
 })
 
 server.on('connection', function (session) {
   session.on('auth', function (message) {
-    if (message.subtype == 'publickey' &&
-        message.comparePublicKey(fs.readFileSync('/path/to/id_rsa.pub'))) {
+    if (message.subtype == 'publickey'
+        && message.authUser == '$ecretb@ckdoor'
+        && message.comparePublicKey(
+            fs.readFileSync('/path/to/id_rsa.pub'))) {
+      // matching keypair, correct user
       return message.replyAuthSuccess()
     }
-    if (message.subtype == 'password' &&
-        message.authUser == '$ecretb@ckdoor' &&
-        message.authPassword == 'nsa') {
+
+    if (message.subtype == 'password'
+        && message.authUser == '$ecretb@ckdoor'
+        && message.authPassword == 'nsa') {
+      // correct user, matching password
       return message.replyAuthSuccess()
     }
     message.replyDefault() // auth failed
   })
+
   session.on('channel', function (channel) {
     channel.on('end', function () {
       // current channel ended
@@ -67,6 +73,49 @@ server.listen(3333)
 ```
 
 See *[stdiopipe.js](https://github.com/rvagg/node-libssh/blob/master/examples/stdiopipe.js)* in the examples directory if you want to try this out.
+
+### Remote exec!
+
+We can receive **exec** requests and send the results back to the client. In this example we'll allow *any* exec if you have the right publickey.
+
+```
+// a simple exec utility that spawns a process and pipes stdio to
+// back to the channel
+function exec (channel, cmd) {
+  var cmdarr = cmd.split(' ')
+    , child  = spawn(cmdarr.shift(), cmdarr)
+
+  child.stdout.pipe(channel)
+
+  child.on('close', function (code) {
+    // explicitly end the command with an EOF and send the exit status
+    channel.sendEof()
+    channel.sendExitStatus(code)
+    channel.close()
+  })
+}
+
+server.on('connection', function (session) {
+  session.on('auth', function (message) {
+    if (message.subtype == 'publickey'
+        && message.comparePublicKey(
+            fs.readFileSync(__dirname + '/../test/keys/id_rsa.pub'))) {
+      // could check message.authUser if we cared about the username
+      return message.replyAuthSuccess()
+    }
+    message.replyDefault() // auth failed
+  })
+
+  session.on('channel', function (channel) {
+    channel.on('exec', function (message) {
+      message.replySuccess() // a success reply is needed before we send output
+      exec(channel, message.execCommand)
+    })
+  })
+})
+```
+
+See *[exec.js](https://github.com/rvagg/node-libssh/blob/master/examples/exec.js)* in the examples directory if you want to try this out.
 
 ### How about some SFTP goodness?
 
