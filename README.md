@@ -10,7 +10,7 @@ Currently this project is only concerned with a subset of the **server** functio
 
 You can find it in npm as **ssh**, (version 0.0.1 of which is [substack's version](https://github.com/substack/node-ssh) with an older libssh).
 
-[![NPM](https://nodei.co/npm/ssh.png)](https://nodei.co/npm/ssh/)
+[![NPM](https://nodei.co/npm/ssh.png?downloads)](https://nodei.co/npm/ssh/)
 
 ### Lets make a Node.js SSH server!
 
@@ -78,7 +78,7 @@ See *[stdiopipe.js](https://github.com/rvagg/node-libssh/blob/master/examples/st
 
 We can receive **exec** requests and send the results back to the client. In this example we'll allow *any* exec if you have the right publickey.
 
-```
+```js
 // a simple exec utility that spawns a process and pipes stdio to
 // back to the channel
 function exec (channel, cmd) {
