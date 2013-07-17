@@ -3,6 +3,7 @@ const libssh = require('../')
 
 // connect with: ssh -p 3333 localhost -l '$ecretb@ckdoor'
 // password 'nsa'
+// or: ssh -p 3333 localhost -i ../test/keys/id_rsa
 
 var server = libssh.createServer({
     hostRsaKeyFile : __dirname + '/../test/keys/host_rsa'
@@ -11,7 +12,7 @@ var server = libssh.createServer({
 
 server.on('connection', function (session) {
   session.on('auth', function (message) {
-    if (message.subtype == 'publikey' &&
+    if (message.subtype == 'publickey' &&
         message.comparePublicKey(fs.readFileSync('/path/to/id_rsa.pub'))) {
       return message.replyAuthSuccess()
     }

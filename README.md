@@ -22,7 +22,7 @@ var server = libssh.createServer({
 
 server.on('connection', function (session) {
   session.on('auth', function (message) {
-    if (message.subtype == 'publikey' &&
+    if (message.subtype == 'publickey' &&
         message.comparePublicKey(fs.readFileSync('/path/to/id_rsa.pub'))) {
       return message.replyAuthSuccess()
     }
