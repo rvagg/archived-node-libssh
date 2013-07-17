@@ -99,7 +99,7 @@ server.on('connection', function (session) {
   session.on('auth', function (message) {
     if (message.subtype == 'publickey'
         && message.comparePublicKey(
-            fs.readFileSync(__dirname + '/../test/keys/id_rsa.pub'))) {
+            fs.readFileSync(__dirname + '/path/to/id_rsa.pub'))) {
       // could check message.authUser if we cared about the username
       return message.replyAuthSuccess()
     }
