@@ -35,7 +35,7 @@ class Server : public node::ObjectWrap {
   uv_poll_t *poll_handle;
   ssh_bind_callbacks_struct *bindCallbacks;
   v8::Persistent<v8::Object> persistentHandle;
-  bool closed;
+  bool running;
 
   NSSH_V8_METHOD( New   )
   NSSH_V8_METHOD( Close )
