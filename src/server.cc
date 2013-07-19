@@ -53,7 +53,10 @@ Server::Server (char *port, char *rsaHostKey, char *dsaHostKey) {
     return;
   }
 
+  this->port = port;
   running = false;
+  if (NSSH_DEBUG)
+    std::cerr << "Server::Server running=false " << port << "\n";
 
   sshbind = ssh_bind_new();
   ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_RSAKEY, rsaHostKey);
@@ -93,6 +96,8 @@ Server::Server (char *port, char *rsaHostKey, char *dsaHostKey) {
   uv_poll_init_socket(uv_default_loop(), poll_handle, socket);
   uv_poll_start(poll_handle, UV_READABLE, Server::SocketPollCallback);
   running = true;
+  if (NSSH_DEBUG)
+    std::cerr << "Server::Server running=true " << port << "\n";
 
   if (NSSH_DEBUG) std::cout << "Server::Server done\n";
 }
@@ -107,6 +112,9 @@ void Server::Close () {
     std::cerr << "Server::Close()\n";
   if (running) {
     running = false;
+    if (NSSH_DEBUG)
+      std::cerr << "Server::Close running=false " << port << "\n";
+    //std::cerr << "+++ Server::Close running=false " << port << ", " << poll_handle->loop << "\n";
     if (poll_handle) {
       uv_poll_stop(poll_handle);
       delete poll_handle;
