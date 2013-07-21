@@ -12,12 +12,18 @@
 
 namespace nssh {
 
-v8::Persistent<v8::Function> Server::constructor;
-v8::Persistent<v8::String> ServerOnConnectionSymbol;
+static v8::Persistent<v8::FunctionTemplate> server_constructor;
 
-v8::Handle<v8::Value> NewServer (const v8::Arguments& args) {
-  v8::HandleScope scope;
-  return scope.Close(Server::NewInstance(args));
+NAN_METHOD(Server::NewInstance) {
+  NanScope();
+
+  v8::Local<v8::Object> instance;
+  v8::Local<v8::FunctionTemplate> constructorHandle =
+      NanPersistentToLocal(server_constructor);
+  v8::Handle<v8::Value> argv[] = { args[0], args[1], args[2] };
+  instance = constructorHandle->GetFunction()->NewInstance(3, argv);
+
+  NanReturnValue(instance);
 }
 
 void Server::SocketPollCallback (uv_poll_t* handle, int status, int events) {
@@ -33,7 +39,6 @@ void Server::SocketPollCallback (uv_poll_t* handle, int status, int events) {
   if (accept != SSH_ERROR) {
     if (NSSH_DEBUG) std::cout << "SocketPollCallback:ssh_bind_accept()\n";
     v8::Handle<v8::Object> sess = Session::NewInstance(session);
-    //HandleSession(session);
     s->OnConnection(sess);
     node::ObjectWrap::Unwrap<Session>(sess)->Start();
   } else {
@@ -127,63 +132,50 @@ void Server::Close () {
 }
 
 void Server::OnConnection (v8::Handle<v8::Object> session) {
-  v8::HandleScope scope;
-  v8::Local<v8::Value> callback = this->handle_->Get(ServerOnConnectionSymbol);
+  NanScope();
+
+  v8::Local<v8::Value> callback = NanObjectWrapHandle(this)
+      ->Get(NanSymbol("onConnection"));
   if (callback->IsFunction()) {
     v8::TryCatch try_catch;
     v8::Handle<v8::Value> argv[] = { session };
-    callback.As<v8::Function>()->Call(this->handle_, 1, argv);
+    callback.As<v8::Function>()->Call(NanObjectWrapHandle(this), 1, argv);
     if (try_catch.HasCaught())
       node::FatalException(try_catch);
   }
 }
 
 void Server::Init () {
-  v8::HandleScope scope;
   v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(New);
-  tpl->SetClassName(v8::String::NewSymbol("Server"));
+  NanAssignPersistent(v8::FunctionTemplate, server_constructor, tpl);
+  tpl->SetClassName(NanSymbol("Server"));
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
-  node::SetPrototypeMethod(tpl, "close", Close);
-  constructor = v8::Persistent<v8::Function>::New(tpl->GetFunction());
-  ServerOnConnectionSymbol = NODE_PSYMBOL("onConnection");
+  NODE_SET_PROTOTYPE_METHOD(tpl, "close", Close);
 }
 
-v8::Handle<v8::Value> Server::NewInstance (const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Server::New) {
+  NanScope();
 
-  v8::Handle<v8::Value> argv[] = { args[0], args[1], args[2] };
-  v8::Local<v8::Object> instance = constructor->NewInstance(3, argv);
+  if (args.Length() == 0)
+    return NanThrowError("constructor requires at least a port argument");
 
-  Server *s = ObjectWrap::Unwrap<Server>(instance);
-  s->persistentHandle = v8::Persistent<v8::Object>::New(instance);
-
-  return scope.Close(instance);
-}
-
-v8::Handle<v8::Value> Server::New (const v8::Arguments& args) {
-  v8::HandleScope scope;
-
-  if (args.Length() == 0) {
-    NSSH_THROW_RETURN(constructor requires at least a port argument)
-  }
-
-  char *port = FromV8String(args[0]);
-  char *rsaHostKey = FromV8String(args[1]);
-  char *dsaHostKey = FromV8String(args[2]);
+  char *port = NanFromV8String(args[0]);
+  char *rsaHostKey = NanFromV8String(args[1]);
+  char *dsaHostKey = NanFromV8String(args[2]);
   Server* obj = new Server(port, rsaHostKey, dsaHostKey);
   obj->Wrap(args.This());
 
-  return scope.Close(args.This());
+  NanReturnValue(args.This());
 }
 
-v8::Handle<v8::Value> Server::Close (const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Server::Close) {
+  NanScope();
 
   Server *s = ObjectWrap::Unwrap<Server>(args.This());
   s->Close();
   s->persistentHandle.Dispose();
 
-  return scope.Close(v8::Undefined());
+  NanReturnValue(v8::Undefined());
 }
 
 } // namespace nssh

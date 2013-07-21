@@ -12,6 +12,7 @@
 #include <libssh/callbacks.h>
 #include <string>
 
+#include "nan.h"
 #include "nssh.h"
 
 namespace nssh {
@@ -46,7 +47,6 @@ class Channel : public node::ObjectWrap {
   bool TryRead ();
 
  private:
-  static v8::Persistent<v8::Function> constructor;
   static void SocketPollCallback(uv_poll_t* handle, int status, int events);
 
   void SetupCallbacks (bool includeData);
@@ -59,11 +59,11 @@ class Channel : public node::ObjectWrap {
   ssh_channel_callbacks_struct *callbacks;
   bool closed;
 
-  NSSH_V8_METHOD( New            )
-  NSSH_V8_METHOD( WriteData      )
-  NSSH_V8_METHOD( SendExitStatus )
-  NSSH_V8_METHOD( Close          )
-  NSSH_V8_METHOD( SendEof        )
+  static NAN_METHOD(New);
+  static NAN_METHOD(WriteData);
+  static NAN_METHOD(SendExitStatus);
+  static NAN_METHOD(Close);
+  static NAN_METHOD(SendEof);
 
 };
 

@@ -13,9 +13,7 @@
 
 namespace nssh {
 
-v8::Persistent<v8::Function> Session::constructor;
-v8::Persistent<v8::String> SessionOnMessageSymbol;
-v8::Persistent<v8::String> SessionOnNewChannelSymbol;
+static v8::Persistent<v8::FunctionTemplate> session_constructor;
 
 void Session::OnError (std::string err) {
   //TODO:
@@ -26,12 +24,13 @@ void Session::OnError (std::string err) {
 void Session::OnMessage (v8::Handle<v8::Object> message) {
   v8::HandleScope scope;
 
-  v8::Local<v8::Value> callback = this->handle_->Get(SessionOnMessageSymbol);
+  v8::Local<v8::Value> callback = NanObjectWrapHandle(this)
+      ->Get(NanSymbol("onMessage"));
 
   if (callback->IsFunction()) {
     v8::TryCatch try_catch;
     v8::Handle<v8::Value> argv[] = { message };
-    callback.As<v8::Function>()->Call(this->handle_, 1, argv);
+    callback.As<v8::Function>()->Call(NanObjectWrapHandle(this), 1, argv);
 
     if (try_catch.HasCaught())
       node::FatalException(try_catch);
@@ -41,12 +40,13 @@ void Session::OnMessage (v8::Handle<v8::Object> message) {
 void Session::OnNewChannel (v8::Handle<v8::Object> channel) {
   v8::HandleScope scope;
 
-  v8::Local<v8::Value> callback = this->handle_->Get(SessionOnNewChannelSymbol);
+  v8::Local<v8::Value> callback = NanObjectWrapHandle(this)
+      ->Get(NanSymbol("onNewChannel"));
 
   if (callback->IsFunction()) {
     v8::TryCatch try_catch;
     v8::Handle<v8::Value> argv[] = { channel };
-    callback.As<v8::Function>()->Call(this->handle_, 1, argv);
+    callback.As<v8::Function>()->Call(NanObjectWrapHandle(this), 1, argv);
 
     if (try_catch.HasCaught())
       node::FatalException(try_catch);
@@ -284,46 +284,47 @@ void Session::Start () {
 }
 
 void Session::Init () {
-  v8::HandleScope scope;
   v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(New);
-  tpl->SetClassName(v8::String::NewSymbol("Session"));
+  NanAssignPersistent(v8::FunctionTemplate, session_constructor, tpl);
+  tpl->SetClassName(NanSymbol("Session"));
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
-  node::SetPrototypeMethod(tpl, "close", Close);
-  constructor = v8::Persistent<v8::Function>::New(tpl->GetFunction());
-  SessionOnMessageSymbol = NODE_PSYMBOL("onMessage");
-  SessionOnNewChannelSymbol = NODE_PSYMBOL("onNewChannel");
+  NODE_SET_PROTOTYPE_METHOD(tpl, "close", Close);
 }
 
 v8::Handle<v8::Object> Session::NewInstance (ssh_session session) {
-  v8::HandleScope scope;
+  NanScope();
 
-  v8::Local<v8::Object> instance = constructor->NewInstance(0, NULL);
+  v8::Local<v8::Object> instance;
+  v8::Local<v8::FunctionTemplate> constructorHandle =
+      NanPersistentToLocal(session_constructor);
+  instance = constructorHandle->GetFunction()->NewInstance(0, NULL);
   Session *s = ObjectWrap::Unwrap<Session>(instance);
   s->session = session;
-  s->persistentHandle = v8::Persistent<v8::Object>::New(instance);
 
+  if (NSSH_DEBUG)
+    std::cout << "returning new Session::New()\n";
   return scope.Close(instance);
 }
 
-v8::Handle<v8::Value> Session::New (const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Session::New) {
+  NanScope();
 
   Session* obj = new Session();
   obj->Wrap(args.This());
   if (NSSH_DEBUG)
     std::cout << "Session::New()" << std::endl;
 
-  return scope.Close(args.This());
+  NanReturnValue(args.This());
 }
 
-v8::Handle<v8::Value> Session::Close (const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Session::Close) {
+  NanScope();
 
   Session *s = ObjectWrap::Unwrap<Session>(args.This());
   s->Close();
   s->persistentHandle.Dispose();
 
-  return scope.Close(v8::Undefined());
+  NanReturnUndefined();
 }
 
 } // namespace nssh

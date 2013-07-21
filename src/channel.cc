@@ -14,11 +14,7 @@
 
 namespace nssh {
 
-v8::Persistent<v8::Function> Channel::constructor;
-v8::Persistent<v8::String> ChannelOnMessageSymbol;
-v8::Persistent<v8::String> ChannelOnSftpMessageSymbol;
-v8::Persistent<v8::String> ChannelOnDataSymbol;
-v8::Persistent<v8::String> ChannelOnCloseSymbol;
+v8::Persistent<v8::FunctionTemplate> channel_constructor;
 
 static int ids = 0;
 
@@ -194,12 +190,13 @@ void Channel::OnMessage (v8::Handle<v8::Object> mess) {
   if (NSSH_DEBUG)
     std::cout << "Channel::OnMessage\n";
 
-  v8::Local<v8::Value> callback = this->handle_->Get(ChannelOnMessageSymbol);
+  v8::Local<v8::Value> callback = NanObjectWrapHandle(this)
+      ->Get(NanSymbol("onMessage"));
 
   if (callback->IsFunction()) {
     v8::TryCatch try_catch;
     v8::Handle<v8::Value> argv[] = { mess };
-    callback.As<v8::Function>()->Call(this->handle_, 1, argv);
+    callback.As<v8::Function>()->Call(NanObjectWrapHandle(this), 1, argv);
 
     if (try_catch.HasCaught())
       node::FatalException(try_catch);
@@ -212,12 +209,13 @@ void Channel::OnSftpMessage (v8::Handle<v8::Object> mess) {
   if (NSSH_DEBUG)
     std::cout << "Channel::OnSftpMessage\n";
 
-  v8::Local<v8::Value> callback = this->handle_->Get(ChannelOnSftpMessageSymbol);
+  v8::Local<v8::Value> callback = NanObjectWrapHandle(this)
+      ->Get(NanSymbol("onSftpMessage"));
 
   if (callback->IsFunction()) {
     v8::TryCatch try_catch;
     v8::Handle<v8::Value> argv[] = { mess };
-    callback.As<v8::Function>()->Call(this->handle_, 1, argv);
+    callback.As<v8::Function>()->Call(NanObjectWrapHandle(this), 1, argv);
 
     if (try_catch.HasCaught())
       node::FatalException(try_catch);
@@ -227,15 +225,16 @@ void Channel::OnSftpMessage (v8::Handle<v8::Object> mess) {
 void Channel::OnData (const char *data, int length) {
   v8::HandleScope scope;
 
-  v8::Local<v8::Value> callback = this->handle_->Get(ChannelOnDataSymbol);
+  v8::Local<v8::Value> callback = NanObjectWrapHandle(this)
+      ->Get(NanSymbol("onData"));
 
   if (callback->IsFunction()) {
     v8::TryCatch try_catch;
     v8::Handle<v8::Value> argv[] = {
-      node::Buffer::New(data, length)->handle_
+      NanNewBufferHandle((char *)data, length)
     };
 
-    callback.As<v8::Function>()->Call(this->handle_, 1, argv);
+    callback.As<v8::Function>()->Call(NanObjectWrapHandle(this), 1, argv);
 
     if (try_catch.HasCaught())
       node::FatalException(try_catch);
@@ -243,32 +242,28 @@ void Channel::OnData (const char *data, int length) {
 }
 
 void Channel::OnClose () {
-  v8::HandleScope scope;
+  NanScope();
 
-  v8::Local<v8::Value> callback = this->handle_->Get(ChannelOnCloseSymbol);
+  v8::Local<v8::Value> callback = NanObjectWrapHandle(this)
+      ->Get(NanSymbol("onClose"));
 
   if (callback->IsFunction()) {
     v8::TryCatch try_catch;
-    callback.As<v8::Function>()->Call(this->handle_, 0, NULL);
+    callback.As<v8::Function>()->Call(NanObjectWrapHandle(this), 0, NULL);
     if (try_catch.HasCaught())
       node::FatalException(try_catch);
   }
 }
 
 void Channel::Init () {
-  v8::HandleScope scope;
   v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(New);
-  tpl->SetClassName(v8::String::NewSymbol("Channel"));
+  NanAssignPersistent(v8::FunctionTemplate, channel_constructor, tpl);
+  tpl->SetClassName(NanSymbol("Channel"));
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
-  node::SetPrototypeMethod(tpl, "writeData", WriteData);
-  node::SetPrototypeMethod(tpl, "sendExitStatus", SendExitStatus);
-  node::SetPrototypeMethod(tpl, "close", Close);
-  node::SetPrototypeMethod(tpl, "sendEof", SendEof);
-  constructor = v8::Persistent<v8::Function>::New(tpl->GetFunction());
-  ChannelOnDataSymbol = NODE_PSYMBOL("onData");
-  ChannelOnCloseSymbol = NODE_PSYMBOL("onClose");
-  ChannelOnMessageSymbol = NODE_PSYMBOL("onMessage");
-  ChannelOnSftpMessageSymbol = NODE_PSYMBOL("onSftpMessage");
+  NODE_SET_PROTOTYPE_METHOD(tpl, "writeData", WriteData);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "sendEof", SendEof);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "sendExitStatus", SendExitStatus);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "close", Close);
 }
 
 v8::Handle<v8::Object> Channel::NewInstance (
@@ -278,64 +273,66 @@ v8::Handle<v8::Object> Channel::NewInstance (
     , void *callbackUserData
   ) {
 
-  v8::HandleScope scope;
+  NanScope();
 
-  v8::Local<v8::Object> instance = constructor->NewInstance(0, NULL);
+  v8::Local<v8::Object> instance;
+  v8::Local<v8::FunctionTemplate> constructorHandle =
+      NanPersistentToLocal(channel_constructor);
+  instance = constructorHandle->GetFunction()->NewInstance(0, NULL);
   Channel *s = ObjectWrap::Unwrap<Channel>(instance);
   s->channel = channel;
   s->session = session;
   s->channelClosedCallback = channelClosedCallback;
   s->callbackUserData = callbackUserData;
-
   s->SetupCallbacks(true);
 
   return scope.Close(instance);
 }
 
-v8::Handle<v8::Value> Channel::New (const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Channel::New) {
+  NanScope();
 
   Channel* obj = new Channel();
   obj->Wrap(args.This());
   if (NSSH_DEBUG)
     std::cout << "Channel::New()" << std::endl;
 
-  return scope.Close(args.This());
+  NanReturnValue(args.This());
 }
 
-v8::Handle<v8::Value> Channel::WriteData (const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Channel::WriteData) {
+  NanScope();
 
   //TODO: async
   Channel* c = node::ObjectWrap::Unwrap<Channel>(args.This());
   ssh_channel_write(c->channel,
       node::Buffer::Data(args[0]), node::Buffer::Length(args[0]));
 
-  return scope.Close(v8::Undefined());
+  NanReturnUndefined();
 }
 
-v8::Handle<v8::Value> Channel::SendExitStatus (const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Channel::SendExitStatus) {
+  NanScope();
 
   //TODO: async
   Channel* c = node::ObjectWrap::Unwrap<Channel>(args.This());
   ssh_channel_request_send_exit_status(c->channel, args[0]->Int32Value());
 
-  return scope.Close(v8::Undefined());
+  NanReturnUndefined();
 }
 
-v8::Handle<v8::Value> Channel::Close (const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Channel::Close) {
+  NanScope();
 
   //TODO: async
   Channel* c = node::ObjectWrap::Unwrap<Channel>(args.This());
   c->CloseChannel();
 
-  return scope.Close(v8::Undefined());
+  NanReturnUndefined();
 }
 
-v8::Handle<v8::Value> Channel::SendEof (const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Channel::SendEof) {
+  NanScope();
 
   //TODO: async
   Channel* c = node::ObjectWrap::Unwrap<Channel>(args.This());
@@ -344,7 +341,7 @@ v8::Handle<v8::Value> Channel::SendEof (const v8::Arguments& args) {
   if (NSSH_DEBUG)
     std::cout << "ssh_channel_send_eof()\n";
 
-  return scope.Close(v8::Undefined());
+  NanReturnUndefined();
 }
 
 } // namespace nssh

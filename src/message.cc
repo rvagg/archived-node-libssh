@@ -86,18 +86,7 @@ const char* Message::MessageSubtypeToString (int type, int subtype) {
   return "";
 }
 
-v8::Persistent<v8::Function> Message::constructor;
-v8::Persistent<v8::String> MessageTypeSymbol;
-v8::Persistent<v8::String> MessageSubtypeSymbol;
-v8::Persistent<v8::String> MessageAuthUserSymbol;
-v8::Persistent<v8::String> MessageAuthPasswordSymbol;
-v8::Persistent<v8::String> MessageExecCommandSymbol;
-v8::Persistent<v8::String> MessageSubsystemSymbol;
-v8::Persistent<v8::String> MessagePtyWidthSymbol;
-v8::Persistent<v8::String> MessagePtyHeightSymbol;
-v8::Persistent<v8::String> MessagePtyPxWidthSymbol;
-v8::Persistent<v8::String> MessagePtyPxHeightSymbol;
-v8::Persistent<v8::String> MessagePtyTermSymbol;
+v8::Persistent<v8::FunctionTemplate> message_constructor;
 
 Message::Message () {
 }
@@ -107,29 +96,16 @@ Message::~Message () {
 }
 
 void Message::Init () {
-  v8::HandleScope scope;
   v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(New);
-  tpl->SetClassName(v8::String::NewSymbol("Message"));
+  NanAssignPersistent(v8::FunctionTemplate, message_constructor, tpl);
+  tpl->SetClassName(NanSymbol("Message"));
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
-  node::SetPrototypeMethod(tpl, "replyDefault", ReplyDefault);
-  node::SetPrototypeMethod(tpl, "replyAuthSuccess", ReplyAuthSuccess);
-  node::SetPrototypeMethod(tpl, "replySuccess", ReplySuccess);
-  node::SetPrototypeMethod(tpl, "comparePublicKey", ComparePublicKey);
-  node::SetPrototypeMethod(tpl, "scpAccept", ScpAccept);
-  node::SetPrototypeMethod(tpl, "sftpAccept", SftpAccept);
-  constructor = v8::Persistent<v8::Function>::New(tpl->GetFunction());
-
-  MessageTypeSymbol = NODE_PSYMBOL("type");
-  MessageSubtypeSymbol = NODE_PSYMBOL("subtype");
-  MessageAuthUserSymbol = NODE_PSYMBOL("authUser");
-  MessageAuthPasswordSymbol = NODE_PSYMBOL("authPassword");
-  MessageExecCommandSymbol = NODE_PSYMBOL("execCommand");
-  MessageSubsystemSymbol = NODE_PSYMBOL("subsystem");
-  MessagePtyWidthSymbol = NODE_PSYMBOL("ptyWidth");
-  MessagePtyHeightSymbol = NODE_PSYMBOL("ptyHeight");
-  MessagePtyPxWidthSymbol = NODE_PSYMBOL("ptyPxWidth");
-  MessagePtyPxHeightSymbol = NODE_PSYMBOL("ptyPxHeight");
-  MessagePtyTermSymbol = NODE_PSYMBOL("ptyTerm");
+  NODE_SET_PROTOTYPE_METHOD(tpl, "replyDefault", ReplyDefault);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "replyAuthSuccess", ReplyAuthSuccess);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "replySuccess", ReplySuccess);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "comparePublicKey", ComparePublicKey);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "scpAccept", ScpAccept);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "sftpAccept", SftpAccept);
 }
 
 v8::Handle<v8::Object> Message::NewInstance (
@@ -142,7 +118,11 @@ v8::Handle<v8::Object> Message::NewInstance (
   if (NSSH_DEBUG)
     std::cout << "Message::NewInstance\n";
 
-  v8::Local<v8::Object> instance = constructor->NewInstance(0, NULL);
+  v8::Local<v8::FunctionTemplate> constructorHandle =
+      NanPersistentToLocal(message_constructor);
+  v8::Local<v8::Object> instance =
+      constructorHandle->GetFunction()->NewInstance(0, NULL);
+
   Message *m = ObjectWrap::Unwrap<Message>(instance);
   m->session = session;
   m->channel = channel;
@@ -156,47 +136,51 @@ v8::Handle<v8::Object> Message::NewInstance (
   const char *typeStr = MessageTypeToString(type);
   const char *subtypeStr = MessageSubtypeToString(type, subtype);
 
-  instance->Set(MessageTypeSymbol,
-      typeStr == NULL ? v8::Null() : v8::String::New(typeStr));
-  instance->Set(MessageSubtypeSymbol,
-      subtypeStr == NULL ? v8::Null() : v8::String::New(subtypeStr));
+  instance->Set(NanSymbol("type"), typeStr == NULL
+    ? v8::Null().As<v8::Object>()
+    : v8::String::New(typeStr).As<v8::Object>()
+  );
+  instance->Set(NanSymbol("subtype"), subtypeStr == NULL
+    ? v8::Null().As<v8::Object>()
+    : v8::String::New(subtypeStr).As<v8::Object>()
+  );
 
   if (type == SSH_REQUEST_AUTH) {
     const char *authUser = ssh_message_auth_user(message);
     if (authUser)
-      instance->Set(MessageAuthUserSymbol, v8::String::New(authUser));
+      instance->Set(NanSymbol("authUser"), v8::String::New(authUser));
     const char *authPassword = ssh_message_auth_password(message);
     if (authPassword)
-      instance->Set(MessageAuthPasswordSymbol, v8::String::New(authPassword));
+      instance->Set(NanSymbol("authPassword"), v8::String::New(authPassword));
   } else if (type == SSH_REQUEST_CHANNEL) {
     if (subtype == SSH_CHANNEL_REQUEST_EXEC) {
       const char *execCommand = ssh_message_channel_request_command(message);
       if (execCommand)
-        instance->Set(MessageExecCommandSymbol, v8::String::New(execCommand));
+        instance->Set(NanSymbol("execCommand"), v8::String::New(execCommand));
     } else if (subtype == SSH_CHANNEL_REQUEST_SUBSYSTEM) {
       const char *subsystem = ssh_message_channel_request_subsystem(message);
       if (subsystem) 
-        instance->Set(MessageSubsystemSymbol, v8::String::New(subsystem));
+        instance->Set(NanSymbol("subsystem"), v8::String::New(subsystem));
     } else if (subtype == SSH_CHANNEL_REQUEST_PTY) {
-      instance->Set(MessagePtyWidthSymbol,
+      instance->Set(NanSymbol("ptyWidth"),
           v8::Integer::New(ssh_message_channel_request_pty_width(message)));
-      instance->Set(MessagePtyHeightSymbol,
+      instance->Set(NanSymbol("ptyHeight"),
           v8::Integer::New(ssh_message_channel_request_pty_height(message)));
-      instance->Set(MessagePtyPxWidthSymbol,
+      instance->Set(NanSymbol("ptyPxWidth"),
           v8::Integer::New(ssh_message_channel_request_pty_pxwidth(message)));
-      instance->Set(MessagePtyPxHeightSymbol,
+      instance->Set(NanSymbol("ptyPxHeight"),
           v8::Integer::New(ssh_message_channel_request_pty_pxheight(message)));
       const char *term = ssh_message_channel_request_pty_term(message);
       if (term)
-        instance->Set(MessagePtyTermSymbol, v8::String::New(term));
+        instance->Set(NanSymbol("ptyTerm"), v8::String::New(term));
     }
   }
 
   return scope.Close(instance);
 }
 
-v8::Handle<v8::Value> Message::New (const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Message::New) {
+  NanScope();
 
   Message* obj = new Message();
   obj->Wrap(args.This());
@@ -204,41 +188,41 @@ v8::Handle<v8::Value> Message::New (const v8::Arguments& args) {
   if (NSSH_DEBUG)
     std::cout << "Message::New()" << std::endl;
 
-  return scope.Close(args.This());
+  NanReturnValue(args.This());
 }
 
-v8::Handle<v8::Value> Message::ReplyDefault (const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Message::ReplyDefault) {
+  NanScope();
 
   //TODO: async
   Message* m = node::ObjectWrap::Unwrap<Message>(args.This());
   ssh_message_reply_default(m->message);
 
-  return scope.Close(v8::Undefined());
+  NanReturnUndefined();
 }
 
-v8::Handle<v8::Value> Message::ReplySuccess (const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Message::ReplySuccess) {
+  NanScope();
 
   //TODO: async
   Message* m = node::ObjectWrap::Unwrap<Message>(args.This());
   ssh_message_channel_request_reply_success(m->message);
 
-  return scope.Close(v8::Undefined());
+  NanReturnUndefined();
 }
 
-v8::Handle<v8::Value> Message::ReplyAuthSuccess (const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Message::ReplyAuthSuccess) {
+  NanScope();
 
   //TODO: async
   Message* m = node::ObjectWrap::Unwrap<Message>(args.This());
   ssh_message_auth_reply_success(m->message, 0);
 
-  return scope.Close(v8::Undefined());
+  NanReturnUndefined();
 }
 
-v8::Handle<v8::Value> Message::ComparePublicKey (const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Message::ComparePublicKey) {
+  NanScope();
 
   Message* m = node::ObjectWrap::Unwrap<Message>(args.This());
   ssh_key userkey = ssh_key_new();
@@ -254,9 +238,7 @@ v8::Handle<v8::Value> Message::ComparePublicKey (const v8::Arguments& args) {
   if (type == SSH_KEYTYPE_UNKNOWN) {
     if (NSSH_DEBUG)
       std::cout << "ERROR!! UNKNOWN KEYTYPE\n";
-    v8::ThrowException(v8::Exception::Error(
-        v8::String::New("Error: unknown key type")));
-    return scope.Close(v8::Undefined());
+    return NanThrowError("Error: unknown key type");
   }
   q = ++p;
   while (!isspace((int)*p)) p++;
@@ -264,9 +246,7 @@ v8::Handle<v8::Value> Message::ComparePublicKey (const v8::Arguments& args) {
 
   int rc = ssh_pki_import_pubkey_base64(q, type, &userkey);
   if (rc) {
-    v8::ThrowException(v8::Exception::Error(
-        v8::String::New("Error: could not read Base64 key data")));
-    return scope.Close(v8::Undefined());
+    return NanThrowError("Error: could not read Base64 key data");
   }
 
   int cmp = ssh_key_cmp(userkey, key, SSH_KEY_CMP_PUBLIC);
@@ -277,11 +257,11 @@ v8::Handle<v8::Value> Message::ComparePublicKey (const v8::Arguments& args) {
     std::cout << "[" << q << "]\n";
   ssh_key_free(userkey);
 
-  return scope.Close(cmp == 0 ? v8::True() : v8::False());
+  NanReturnValue(cmp == 0 ? v8::True() : v8::False());
 }
 
-v8::Handle<v8::Value> Message::SftpAccept (const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Message::SftpAccept) {
+  NanScope();
 
   if (NSSH_DEBUG)
     std::cout << "Message::SftpAccept\n";
@@ -291,12 +271,12 @@ v8::Handle<v8::Value> Message::SftpAccept (const v8::Arguments& args) {
   sftp_session sftp = sftp_server_new(m->session, m->channel->channel);
   m->channel->SetSftp(sftp);
 
-  return scope.Close(v8::Undefined());
+  NanReturnUndefined();
 }
 
 // meh, not really working...
-v8::Handle<v8::Value> Message::ScpAccept (const v8::Arguments& args) {
-  v8::HandleScope scope;
+NAN_METHOD(Message::ScpAccept) {
+  NanScope();
 
   if (NSSH_DEBUG)
     std::cout << "Message::ScpAccept\n";
@@ -329,7 +309,7 @@ v8::Handle<v8::Value> Message::ScpAccept (const v8::Arguments& args) {
   if (NSSH_DEBUG)
     std::cout << "ssh_scp_read(): " << len << " = [" << buf << "]\n";
 
-  return scope.Close(v8::Undefined());
+  NanReturnUndefined();
 }
 
 } // namespace nssh

@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "nan.h"
 #include "nssh.h"
 #include "channel.h"
 
@@ -32,7 +33,6 @@ class Session : public node::ObjectWrap {
   void OnError (std::string error);
 
  private:
-  static v8::Persistent<v8::Function> constructor;
   static void SocketPollCallback (uv_poll_t* handle, int status, int events);
   static void ChannelClosedCallback (Channel *channel, void *user);
 
@@ -44,8 +44,8 @@ class Session : public node::ObjectWrap {
 
   std::vector<Channel*> channels;
 
-  NSSH_V8_METHOD( New )
-  NSSH_V8_METHOD( Close )
+  static NAN_METHOD(New);
+  static NAN_METHOD(Close);
 };
 
 } // namespace nssh

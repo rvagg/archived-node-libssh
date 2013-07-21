@@ -30,19 +30,18 @@ class Message : public node::ObjectWrap {
   ~Message ();
 
  private:
-  static v8::Persistent<v8::Function> constructor;
 
   ssh_message message;
   ssh_session session;
   Channel *channel;
 
-  NSSH_V8_METHOD( New              )
-  NSSH_V8_METHOD( ReplyDefault     )
-  NSSH_V8_METHOD( ReplyAuthSuccess )
-  NSSH_V8_METHOD( ReplySuccess     )
-  NSSH_V8_METHOD( ComparePublicKey )
-  NSSH_V8_METHOD( ScpAccept        )
-  NSSH_V8_METHOD( SftpAccept       )
+  static NAN_METHOD(New);
+  static NAN_METHOD(ReplyDefault);
+  static NAN_METHOD(ReplyAuthSuccess);
+  static NAN_METHOD(ReplySuccess);
+  static NAN_METHOD(ComparePublicKey);
+  static NAN_METHOD(ScpAccept);
+  static NAN_METHOD(SftpAccept);
 };
 
 } // namespace nssh

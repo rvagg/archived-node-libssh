@@ -20,8 +20,8 @@ void Init (v8::Handle<v8::Object> target) {
   SftpMessage::Init();
 
   v8::Local<v8::Function> Server
-      = v8::FunctionTemplate::New(NewServer)->GetFunction();
-  target->Set(v8::String::NewSymbol("Server"), Server);
+      = v8::FunctionTemplate::New(Server::NewInstance)->GetFunction();
+  target->Set(NanSymbol("Server"), Server);
 }
 
 NODE_MODULE(ssh, Init)

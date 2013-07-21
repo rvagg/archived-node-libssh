@@ -10,16 +10,15 @@
 
 #include <libssh/server.h>
 
+#include "nan.h"
 #include "nssh.h"
 
 namespace nssh {
 
-v8::Handle<v8::Value> NewServer (const v8::Arguments& args);
-
 class Server : public node::ObjectWrap {
  public:
   static void Init ();
-  static v8::Handle<v8::Value> NewInstance (const v8::Arguments& args);
+  static NAN_METHOD(NewInstance);
 
   Server (char *port, char *rsaHostKey, char *dsaHostKey);
   ~Server ();
@@ -28,7 +27,6 @@ class Server : public node::ObjectWrap {
   void Close ();
 
  private:
-  static v8::Persistent<v8::Function> constructor;
   static void SocketPollCallback (uv_poll_t* handle, int status, int events);
 
   ssh_bind sshbind;
@@ -38,8 +36,8 @@ class Server : public node::ObjectWrap {
   bool running;
   char* port;
 
-  NSSH_V8_METHOD( New   )
-  NSSH_V8_METHOD( Close )
+  static NAN_METHOD(New);
+  static NAN_METHOD(Close);
 };
 
 } // namespace nssh

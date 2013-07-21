@@ -29,19 +29,17 @@ class SftpMessage : public node::ObjectWrap {
   ~SftpMessage ();
 
  private:
-  static v8::Persistent<v8::Function> constructor;
-
   sftp_client_message message;
   ssh_session session;
   Channel *channel;
 
-  NSSH_V8_METHOD( New         )
-  NSSH_V8_METHOD( ReplyName   )
-  NSSH_V8_METHOD( ReplyNames  )
-  NSSH_V8_METHOD( ReplyAttr   )
-  NSSH_V8_METHOD( ReplyHandle )
-  NSSH_V8_METHOD( ReplyStatus )
-  NSSH_V8_METHOD( ReplyData   )
+  static NAN_METHOD(New);
+  static NAN_METHOD(ReplyName);
+  static NAN_METHOD(ReplyNames);
+  static NAN_METHOD(ReplyAttr);
+  static NAN_METHOD(ReplyHandle);
+  static NAN_METHOD(ReplyStatus);
+  static NAN_METHOD(ReplyData);
 };
 
 } // namespace nssh
