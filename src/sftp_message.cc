@@ -205,10 +205,13 @@ v8::Handle<v8::Object> SftpMessage::NewInstance (
           (const char *)message->handle->data
         , ssh_string_len(message->handle))
       );
+      if (NSSH_DEBUG)
+        std::cout << "read `data`, " << ssh_string_len(message->data)
+          << " bytes\n";
       instance->Set(NanSymbol("offset"), v8::Integer::New(message->offset));
       instance->Set(NanSymbol("data"), NanNewBufferHandle(
-          (char *)message->handle->data
-        , ssh_string_len(message->handle)
+          (char *)ssh_string_get_char(message->data)
+        , ssh_string_len(message->data)
       ));
       break;
     case SSH_FXP_REMOVE:

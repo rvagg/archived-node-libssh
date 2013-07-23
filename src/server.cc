@@ -98,7 +98,8 @@ Server::Server (char *port, char *rsaHostKey, char *dsaHostKey) {
   poll_handle = new uv_poll_t;
   uv_os_sock_t socket = ssh_bind_get_fd(sshbind);
   poll_handle->data = this;
-  uv_poll_init_socket(uv_default_loop(), poll_handle, socket);
+  uv_loop_t *loop = uv_default_loop();
+  uv_poll_init_socket(loop, poll_handle, socket);
   uv_poll_start(poll_handle, UV_READABLE, Server::SocketPollCallback);
   running = true;
   if (NSSH_DEBUG)
