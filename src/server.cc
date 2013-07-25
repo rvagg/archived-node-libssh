@@ -90,10 +90,12 @@ Server::Server (char *port, char *rsaHostKey, char *dsaHostKey) {
 
   assert(ssh_bind_get_fd(sshbind) > 0);
 
+  /*
   bindCallbacks = new ssh_bind_callbacks_struct;
   bindCallbacks->incoming_connection = IncomingConnectionCallback;
   ssh_callbacks_init(bindCallbacks);
   ssh_bind_set_callbacks(sshbind, bindCallbacks, 0);
+  */
 
   poll_handle = new uv_poll_t;
   uv_os_sock_t socket = ssh_bind_get_fd(sshbind);
@@ -121,14 +123,17 @@ void Server::Close () {
     if (NSSH_DEBUG)
       std::cerr << "Server::Close running=false " << port << "\n";
     //std::cerr << "+++ Server::Close running=false " << port << ", " << poll_handle->loop << "\n";
-    if (poll_handle) {
-      uv_poll_stop(poll_handle);
-      delete poll_handle;
-    }
-    if (sshbind)
-      ssh_bind_free(sshbind);
+    uv_poll_stop(poll_handle);
+    delete poll_handle;
+    ssh_bind_free(sshbind);
+    if (NSSH_DEBUG)
+      std::cerr << "Server::Close ssh_bind_free\n";
+
+    ssh_finalize();
+    /*
     if (bindCallbacks)
       delete bindCallbacks;
+      */
   }
 }
 

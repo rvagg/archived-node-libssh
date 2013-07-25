@@ -35,6 +35,7 @@ class Session : public node::ObjectWrap {
  private:
   static void SocketPollCallback (uv_poll_t* handle, int status, int events);
   static void ChannelClosedCallback (Channel *channel, void *user);
+  static int SessionMessageCallback (ssh_session session, ssh_message message, void *data);
 
   ssh_session session;
   uv_poll_t *poll_handle;

@@ -238,9 +238,10 @@ void SessionGlobalRequestCallback (ssh_session session, ssh_message message,
 }
 
 // not used as far as I can tell
-int SessionMessageCallback (ssh_session session, ssh_message msg, void *data) {
+int Session::SessionMessageCallback (ssh_session session, ssh_message message, void *data) {
   if (NSSH_DEBUG)
     std::cout << "SessionMessageCallback!\n";
+
   return 1;
 }
 
@@ -251,6 +252,7 @@ void SessionStatusCallback (void *userdata, float status) {
 
 
 void Session::Start () {
+  /*
   callbacks = new ssh_callbacks_struct;
   callbacks->auth_function = SessionAuthCallback;
   callbacks->log_function = SessionLogCallback;
@@ -260,6 +262,7 @@ void Session::Start () {
   ssh_callbacks_init(callbacks);
   ssh_set_callbacks(session, callbacks);
   ssh_set_message_callback(session, SessionMessageCallback, this);
+  */
 
   ssh_options_set(session, SSH_OPTIONS_TIMEOUT, "0");
   ssh_options_set(session, SSH_OPTIONS_TIMEOUT_USEC, "1");

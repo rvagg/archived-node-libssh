@@ -54,10 +54,10 @@ test('test standard pub/privkey connection', function (t) {
       t.notOk(err, 'no error')
       t.ok(stream, 'has stream')
       fs.createReadStream(testfile)
-        .pipe(stream)
         .on('close', function () {
           connection.end()
         })
+        .pipe(stream)
     })
   }
 

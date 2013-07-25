@@ -1,7 +1,7 @@
 {'targets': [{
     'target_name': 'libssh'
   , 'variables': {
-        'libsshversion': '0.5.90'
+        'libsshversion': '0.5.91'
     }
   , 'type': 'static_library'
     # Overcomes an issue with the linker and thin .a files on SmartOS
@@ -79,6 +79,7 @@
       , 'libssh-<(libsshversion)/src/error.c'
       , 'libssh-<(libsshversion)/src/gcrypt_missing.c'
       , 'libssh-<(libsshversion)/src/getpass.c'
+      , 'libssh-<(libsshversion)/src/gssapi.c'
       , 'libssh-<(libsshversion)/src/gzip.c'
       , 'libssh-<(libsshversion)/src/init.c'
       , 'libssh-<(libsshversion)/src/kex1.c'
@@ -110,6 +111,5 @@
       , 'libssh-<(libsshversion)/src/string.c'
       , 'libssh-<(libsshversion)/src/threads.c'
       , 'libssh-<(libsshversion)/src/wrapper.c'
-      , 'libssh-<(libsshversion)/src/threads/pthread.c'
     ]
 }]}
