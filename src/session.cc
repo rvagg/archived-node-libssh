@@ -69,7 +69,7 @@ void Session::ChannelClosedCallback (Channel *channel, void *userData) {
         std::cout << "Found and removed channel from list\n";
       break;
     }
-    it++;
+    ++it;
   }
 
   /*
