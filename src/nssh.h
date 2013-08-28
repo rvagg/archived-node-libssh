@@ -6,7 +6,7 @@
 
 #include <node.h>
 //#include <node_buffer.h>
-#include "nan.h"
+#include <nan.h>
 
 #define NSSH_DEBUG false
 //#define cout cerr

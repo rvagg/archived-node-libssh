@@ -165,9 +165,30 @@ NAN_METHOD(Server::New) {
   if (args.Length() == 0)
     return NanThrowError("constructor requires at least a port argument");
 
-  char *port = NanFromV8String(args[0]);
-  char *rsaHostKey = NanFromV8String(args[1]);
-  char *dsaHostKey = NanFromV8String(args[2]);
+  char *port = NanFromV8String(
+      args[0]->ToString()
+    , Nan::UTF8
+    , NULL
+    , NULL
+    , 0
+    , v8::String::NO_OPTIONS
+  );
+  char *rsaHostKey = NanFromV8String(
+      args[1].As<v8::Object>()
+    , Nan::UTF8
+    , NULL
+    , NULL
+    , 0
+    , v8::String::NO_OPTIONS
+  );
+  char *dsaHostKey = NanFromV8String(
+      args[2].As<v8::Object>()
+    , Nan::UTF8
+    , NULL
+    , NULL
+    , 0
+    , v8::String::NO_OPTIONS
+  );
   Server* obj = new Server(port, rsaHostKey, dsaHostKey);
   obj->Wrap(args.This());
 

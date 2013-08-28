@@ -323,7 +323,15 @@ static inline bool HasStringProperty(
 static inline char* GetStringProperty(
       v8::Handle<v8::Object> object
     , v8::Handle<v8::String> property) {
-  return NanFromV8String(object->Get(property));
+
+  return NanFromV8String(
+      object->Get(property).As<v8::Object>()
+    , Nan::UTF8
+    , NULL
+    , NULL
+    , 0
+    , v8::String::NO_OPTIONS
+  );
 }
 
 static inline bool HasIntegerProperty(
@@ -456,10 +464,22 @@ NAN_METHOD(SftpMessage::New) {
 NAN_METHOD(SftpMessage::ReplyName) {
   NanScope();
 
+  char *s = NanFromV8String(
+      args[0].As<v8::Object>()
+    , Nan::UTF8
+    , NULL
+    , NULL
+    , 0
+    , v8::String::NO_OPTIONS
+  );
+
   //TODO: async
   SftpMessage* m = node::ObjectWrap::Unwrap<SftpMessage>(args.This());
-  sftp_reply_name(m->message, NanFromV8String(args[0]),
-      args.Length() > 1 ? ObjectToAttributes(args[1]->ToObject()) : 0);
+  sftp_reply_name(
+      m->message
+    , s
+    , args.Length() > 1 ? ObjectToAttributes(args[1]->ToObject()) : 0
+  );
 
   NanReturnUndefined();
 }
@@ -476,14 +496,30 @@ NAN_METHOD(SftpMessage::ReplyNames) {
 
     v8::Local<v8::Object> obj = array->Get(i).As<v8::Object>();
 
+    char *fname = NanFromV8String(
+        obj->Get(NanSymbol("filename")).As<v8::Object>()
+      , Nan::UTF8
+      , NULL
+      , NULL
+      , 0
+      , v8::String::NO_OPTIONS
+    );
+    char *lname = NanFromV8String(
+        obj->Get(NanSymbol("longname")).As<v8::Object>()
+      , Nan::UTF8
+      , NULL
+      , NULL
+      , 0
+      , v8::String::NO_OPTIONS
+    );
+
     if (NSSH_DEBUG)
-      std::cout << "Name [" << NanFromV8String(obj->Get(NanSymbol("filename")))
-        << "] [" <<  NanFromV8String(obj->Get(NanSymbol("longname"))) << "]\n";
+      std::cout << "Name [" << fname << "] [" << lname << "]\n";
 
     sftp_reply_names_add(
         m->message
-      , NanFromV8String(obj->Get(NanSymbol("filename"))) // free
-      , NanFromV8String(obj->Get(NanSymbol("longname"))) // free
+      , fname //TODO: free (I think?)
+      , lname //TODO: free (I think?)
       , obj->Has(NanSymbol("attrs"))
           ? ObjectToAttributes(obj->Get(NanSymbol("attrs")).As<v8::Object>())
           : 0
@@ -509,9 +545,18 @@ NAN_METHOD(SftpMessage::ReplyAttr) {
 NAN_METHOD(SftpMessage::ReplyHandle) {
   NanScope();
 
+  char *s = NanFromV8String(
+      args[0].As<v8::Object>()
+    , Nan::UTF8
+    , NULL
+    , NULL
+    , 0
+    , v8::String::NO_OPTIONS
+  );
+
   //TODO: async
   SftpMessage* m = node::ObjectWrap::Unwrap<SftpMessage>(args.This());
-  sftp_reply_handle(m->message, ssh_string_from_char(NanFromV8String(args[0]))); // free x 2
+  sftp_reply_handle(m->message, ssh_string_from_char(s)); // free x 2
 
   NanReturnUndefined();
 }
@@ -524,10 +569,20 @@ NAN_METHOD(SftpMessage::ReplyStatus) {
   if (NSSH_DEBUG)
     std::cout << "ReplyStatus: " << StringToStatusCode(args[0].As<v8::String>())
       << std::endl;
+
   sftp_reply_status(
       m->message
     , StringToStatusCode(args[0].As<v8::String>())
-    , args.Length() > 1 ? NanFromV8String(args[1]) : NULL // free
+    , args.Length() > 1
+        ? NanFromV8String(
+              args[1].As<v8::Object>()
+            , Nan::UTF8
+            , NULL
+            , NULL
+            , 0
+            , v8::String::NO_OPTIONS
+          ) // free
+        : NULL
   );
 
   NanReturnUndefined();

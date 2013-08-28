@@ -7,10 +7,9 @@
 
 #include <node.h>
 #include <node_buffer.h>
-
 #include <libssh/server.h>
+#include <nan.h>
 
-#include "nan.h"
 #include "nssh.h"
 
 namespace nssh {

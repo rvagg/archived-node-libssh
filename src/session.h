@@ -11,8 +11,8 @@
 #include <libssh/poll.h>
 #include <string>
 #include <vector>
+#include <nan.h>
 
-#include "nan.h"
 #include "nssh.h"
 #include "channel.h"
 

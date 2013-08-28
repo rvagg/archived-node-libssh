@@ -11,8 +11,8 @@
 #include <libssh/sftp.h>
 #include <libssh/callbacks.h>
 #include <string>
+#include <nan.h>
 
-#include "nan.h"
 #include "nssh.h"
 
 namespace nssh {
