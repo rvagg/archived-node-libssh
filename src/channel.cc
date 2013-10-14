@@ -111,13 +111,15 @@ void Channel::CloseChannel () {
     TryRead(); // one last time
     if (NSSH_DEBUG)
       std::cout << "CloseChannel, closed = true " << myid << "\n";
-    closed = true;
     if (NSSH_DEBUG)
       std::cout << "ssh_channel_close()\n";
     ssh_channel_close(channel);
     ssh_channel_free(channel);
     if (channelClosedCallback)
       channelClosedCallback(this, callbackUserData);
+    TryRead(); // not really a read, just flush the msg buffer
+               // otherwise the channel may just hang
+    closed = true;
     OnClose();
   }
 }
