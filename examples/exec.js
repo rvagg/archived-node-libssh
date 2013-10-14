@@ -10,22 +10,6 @@ var server = libssh.createServer({
   , hostDsaKeyFile : __dirname + '/../test/keys/host_dsa'
 })
 
-// a simple exec utility that spawns a process and pipes stdio to
-// back to the channel
-function exec (channel, cmd) {
-  var cmdarr = cmd.split(' ')
-    , child  = spawn(cmdarr.shift(), cmdarr)
-
-  child.stdout.pipe(channel)
-
-  child.on('close', function (code) {
-    // explicitly end the command with an EOF and send the exit status
-    channel.sendEof()
-    channel.sendExitStatus(code)
-    channel.close()
-  })
-}
-
 server.on('connection', function (session) {
   session.on('auth', function (message) {
     if (message.subtype == 'publickey'
@@ -40,7 +24,16 @@ server.on('connection', function (session) {
   session.on('channel', function (channel) {
     channel.on('exec', function (message) {
       message.replySuccess() // a success reply is needed before we send output
-      exec(channel, message.execCommand)
+
+      var child = spawn('/bin/bash', ['-c', message.execCommand])
+
+      child.stdout.pipe(channel)
+      channel.pipe(child.stdin)
+
+      child.on('close', function (code) {
+        channel.sendExitStatus(code)
+        channel.close()
+      })
     })
   })
 })
