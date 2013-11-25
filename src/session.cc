@@ -2,6 +2,7 @@
  * MIT +no-false-attribs License <https://github.com/rvagg/node-ssh/blob/master/LICENSE>
  */
 #include <node.h>
+#include <nan.h>
 #include <iostream>
 #include <libssh/server.h>
 #include <libssh/keys.h>
@@ -22,7 +23,7 @@ void Session::OnError (std::string err) {
 }
 
 void Session::OnMessage (v8::Handle<v8::Object> message) {
-  v8::HandleScope scope;
+  NanScope();
 
   v8::Local<v8::Value> callback = NanObjectWrapHandle(this)
       ->Get(NanSymbol("onMessage"));
@@ -38,7 +39,7 @@ void Session::OnMessage (v8::Handle<v8::Object> message) {
 }
 
 void Session::OnNewChannel (v8::Handle<v8::Object> channel) {
-  v8::HandleScope scope;
+  NanScope();
 
   v8::Local<v8::Value> callback = NanObjectWrapHandle(this)
       ->Get(NanSymbol("onNewChannel"));
@@ -82,6 +83,8 @@ void Session::ChannelClosedCallback (Channel *channel, void *userData) {
 }
 
 void Session::SocketPollCallback (uv_poll_t* handle, int status, int events) {
+  NanScope();
+
   Session* s = static_cast<Session*>(handle->data);
 
   if (NSSH_DEBUG) {
@@ -196,7 +199,7 @@ Session::Session () {
 Session::~Session () {
   Close();
   ssh_free(session);
-  delete callbacks;
+  //delete callbacks;
 }
 
 void Session::Close () {
@@ -293,6 +296,8 @@ void Session::Start () {
 }
 
 void Session::Init () {
+  NanScope();
+
   v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(New);
   NanAssignPersistent(v8::FunctionTemplate, session_constructor, tpl);
   tpl->SetClassName(NanSymbol("Session"));
@@ -309,6 +314,7 @@ v8::Handle<v8::Object> Session::NewInstance (ssh_session session) {
   instance = constructorHandle->GetFunction()->NewInstance(0, NULL);
   Session *s = ObjectWrap::Unwrap<Session>(instance);
   s->session = session;
+  NanAssignPersistent(v8::Object, s->persistentHandle, instance);
 
   if (NSSH_DEBUG)
     std::cout << "returning new Session::New()\n";
@@ -329,9 +335,12 @@ NAN_METHOD(Session::New) {
 NAN_METHOD(Session::Close) {
   NanScope();
 
+  if (NSSH_DEBUG)
+    std::cout << "Session::Close()" << std::endl;
+
   Session *s = ObjectWrap::Unwrap<Session>(args.This());
   s->Close();
-  s->persistentHandle.Dispose();
+  NanDispose(s->persistentHandle);
 
   NanReturnUndefined();
 }

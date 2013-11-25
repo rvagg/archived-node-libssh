@@ -15,6 +15,8 @@ namespace nssh {
 v8::Persistent<v8::FunctionTemplate> sftpmessage_constructor;
 
 inline uint32_t StringToStatusCode (v8::Handle<v8::String> str) {
+  NanScope();
+
   if (str->Equals(NanSymbol("ok"))) {
     return SSH_FX_OK;
   } else if (str->Equals(NanSymbol("eof"))) {
@@ -139,6 +141,8 @@ SftpMessage::~SftpMessage () {
 }
 
 void SftpMessage::Init () {
+  NanScope();
+
   v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(New);
   NanAssignPersistent(v8::FunctionTemplate, sftpmessage_constructor, tpl);
   tpl->SetClassName(NanSymbol("SftpMessage"));
@@ -156,7 +160,7 @@ v8::Handle<v8::Object> SftpMessage::NewInstance (
     , Channel *channel
     , sftp_client_message message) {
 
-  v8::HandleScope scope;
+  NanScope();
 
   if (NSSH_DEBUG)
     std::cout << "SftpMessage::NewInstance\n";
@@ -324,6 +328,8 @@ static inline char* GetStringProperty(
       v8::Handle<v8::Object> object
     , v8::Handle<v8::String> property) {
 
+  NanScope();
+
   return NanFromV8String(
       object->Get(property).As<v8::Object>()
     , Nan::UTF8
@@ -343,10 +349,14 @@ static inline bool HasIntegerProperty(
 static inline uint64_t GetIntegerProperty(
       v8::Handle<v8::Object> object
     , v8::Handle<v8::String> property) {
+
+  NanScope();
   return object->Get(property)->IntegerValue();
 }
 
 sftp_attributes ObjectToAttributes (v8::Local<v8::Object> attrObject) {
+  NanScope();
+
   sftp_attributes attr = new sftp_attributes_struct;
   attr->flags = 0;
 

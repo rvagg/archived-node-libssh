@@ -27,6 +27,8 @@ NAN_METHOD(Server::NewInstance) {
 }
 
 void Server::SocketPollCallback (uv_poll_t* handle, int status, int events) {
+  NanScope();
+
   Server* s = static_cast<Server*>(handle->data);
 
   if (NSSH_DEBUG)
@@ -152,6 +154,8 @@ void Server::OnConnection (v8::Handle<v8::Object> session) {
 }
 
 void Server::Init () {
+  NanScope();
+
   v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(New);
   NanAssignPersistent(v8::FunctionTemplate, server_constructor, tpl);
   tpl->SetClassName(NanSymbol("Server"));

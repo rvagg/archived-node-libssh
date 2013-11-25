@@ -2,6 +2,7 @@
  * MIT +no-false-attribs License <https://github.com/rvagg/node-ssh/blob/master/LICENSE>
  */
 #include <node.h>
+#include <nan.h>
 #include <node_buffer.h>
 #include <iostream>
 #include <libssh/server.h>
@@ -125,6 +126,8 @@ void Channel::CloseChannel () {
 }
 
 bool Channel::TryRead () {
+  NanScope();
+
   if (NSSH_DEBUG)
     std::cout << "TryRead closed=" << (closed ? "true" : "false") << " " << myid << std::endl;
   if (closed)
@@ -187,7 +190,7 @@ bool Channel::IsChannel (ssh_channel channel) {
 }
 
 void Channel::OnMessage (v8::Handle<v8::Object> mess) {
-  v8::HandleScope scope;
+  NanScope();
 
   if (NSSH_DEBUG)
     std::cout << "Channel::OnMessage\n";
@@ -206,7 +209,7 @@ void Channel::OnMessage (v8::Handle<v8::Object> mess) {
 }
 
 void Channel::OnSftpMessage (v8::Handle<v8::Object> mess) {
-  v8::HandleScope scope;
+  NanScope();
 
   if (NSSH_DEBUG)
     std::cout << "Channel::OnSftpMessage\n";
@@ -225,7 +228,7 @@ void Channel::OnSftpMessage (v8::Handle<v8::Object> mess) {
 }
 
 void Channel::OnData (const char *data, int length) {
-  v8::HandleScope scope;
+  NanScope();
 
   v8::Local<v8::Value> callback = NanObjectWrapHandle(this)
       ->Get(NanSymbol("onData"));
@@ -258,6 +261,8 @@ void Channel::OnClose () {
 }
 
 void Channel::Init () {
+  NanScope();
+
   v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(New);
   NanAssignPersistent(v8::FunctionTemplate, channel_constructor, tpl);
   tpl->SetClassName(NanSymbol("Channel"));

@@ -96,6 +96,8 @@ Message::~Message () {
 }
 
 void Message::Init () {
+  NanScope();
+
   v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(New);
   NanAssignPersistent(v8::FunctionTemplate, message_constructor, tpl);
   tpl->SetClassName(NanSymbol("Message"));
@@ -113,7 +115,7 @@ v8::Handle<v8::Object> Message::NewInstance (
     , Channel *channel
     , ssh_message message) {
 
-  v8::HandleScope scope;
+  NanScope();
 
   if (NSSH_DEBUG)
     std::cout << "Message::NewInstance\n";
