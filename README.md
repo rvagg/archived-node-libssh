@@ -12,6 +12,10 @@ You can find it in npm as **ssh**, (version 0.0.1 of which is [substack's versio
 
 [![NPM](https://nodei.co/npm/ssh.png?downloads)](https://nodei.co/npm/ssh/)
 
+### Installing
+
+To compile, you'll need to have libkrb5-dev (kerberos development files) and libssl-dev (openssl development files) installed on your system. `npm install ssh` should do the rest.
+
 ### Lets make a Node.js SSH server!
 
 ```js
