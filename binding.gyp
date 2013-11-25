@@ -20,8 +20,7 @@
             }]
           , ['OS == "linux"', {
                 'libraries': [
-                    '-lssl'
-                  , '-lcrypto'
+                    '-lcrypto'
                 ]
             }]
           , ['OS == "solaris"', {
@@ -34,7 +33,7 @@
             }]
         ]
       , 'include_dirs' : [
-            '<!(node -p -e "require(\'path\').dirname(require.resolve(\'nan\'))")'
+            '<!(node -e "require(\'nan\')")'
         ]
       , 'dependencies': [
             '<(module_root_dir)/deps/libssh.gyp:libssh'
