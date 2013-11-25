@@ -92,7 +92,10 @@ Message::Message () {
 }
 
 Message::~Message () {
-  ssh_message_free(message);
+  //TODO: GC is knocking this off too quick, either need to figure out
+  // if libssh is doing this for us or protect Message from GC until
+  // it's no longer needed -- what's the trigger for this?
+  //ssh_message_free(message);
 }
 
 void Message::Init () {

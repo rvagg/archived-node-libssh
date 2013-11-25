@@ -17,7 +17,8 @@
   "devDependencies": {
     "tap": "*",
     "ssh2": "*",
-    "bl": "*"
+    "bl": "*",
+    "node-gyp": "~0.12.1"
   },
   "repository": {
     "type": "git",

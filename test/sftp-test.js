@@ -33,7 +33,7 @@ function makefakeattr (mode) {
 }
 
 test('test sftp', function (t) {
-  t.plan(executeServerTest.plan + 13)
+  t.plan(executeServerTest.plan + 15)
 
   var connectOptions = {
           host: 'localhost'
