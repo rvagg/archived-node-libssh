@@ -212,6 +212,12 @@ void Session::Close () {
     std::cout << "Stopped polling session, " << channels.size() << " channels open\n";
 }
 
+void Session::SetAuthMethods (int methods) {
+  ssh_set_auth_methods(session, methods);
+  if (NSSH_DEBUG)
+    std::cout << "Changed auth methods to " << methods << "\n";
+}
+
 // a client callback (I think)
 int SessionAuthCallback (const char *prompt, char *buf, size_t len,
     int echo, int verify, void *userdata) {
@@ -326,6 +332,15 @@ NAN_METHOD(Session::Close) {
   Session *s = ObjectWrap::Unwrap<Session>(args.This());
   s->Close();
   s->persistentHandle.Dispose();
+
+  NanReturnUndefined();
+}
+
+NAN_METHOD(Session::SetAuthMethods) {
+  NanScope();
+
+  Session *s = ObjectWrap::Unwrap<Session>(args.This());
+  s->SetAuthMethods(args[0]->Int32Value());
 
   NanReturnUndefined();
 }

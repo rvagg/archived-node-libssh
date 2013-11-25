@@ -28,6 +28,7 @@ class Session : public node::ObjectWrap {
 
   void Start ();
   void Close ();
+  void SetAuthMethods (int methods);
   void OnMessage (v8::Handle<v8::Object> message);
   void OnNewChannel (v8::Handle<v8::Object> channel);
   void OnError (std::string error);
@@ -47,6 +48,7 @@ class Session : public node::ObjectWrap {
 
   static NAN_METHOD(New);
   static NAN_METHOD(Close);
+  static NAN_METHOD(SetAuthMethods);
 };
 
 } // namespace nssh
