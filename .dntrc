@@ -4,9 +4,9 @@
 NODE_VERSIONS="master v0.11.9 v0.10.22"
 OUTPUT_PREFIX="libssh-"
 TEST_CMD="\
-  apt-get install -y libkrb5-dev libssl-dev &&                   \
-  cd /dnt/ &&                                                    \
-  npm install &&                                                 \
+  apt-get install -y libkrb5-dev libssl-dev &&                           \
+  cd /dnt/ &&                                                            \
+  npm install &&                                                         \
   node_modules/.bin/node-gyp --nodedir /usr/src/node/ rebuild --debug && \
-  node_modules/.bin/tap test/*-test.js --stderr;                 \
+  node_modules/.bin/tap test/*-test.js --stderr;                         \
 "
