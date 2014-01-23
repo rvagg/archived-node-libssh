@@ -11,7 +11,7 @@
     "ssh",
     "libssh"
   ],
-  "version": "1.7.0",
+  "version": "1.7.1",
   "main": "index.js",
   "dependencies": {
     "bindings": "~1.1.0",
