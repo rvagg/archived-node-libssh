@@ -32,6 +32,7 @@ class Channel : public node::ObjectWrap {
   Channel ();
   ~Channel ();
 
+  void Setup ();
   void CloseChannel ();
   void SetSftp (sftp_session sftp);
 
@@ -60,6 +61,7 @@ class Channel : public node::ObjectWrap {
   bool closed;
 
   static NAN_METHOD(New);
+  static NAN_METHOD(Start);
   static NAN_METHOD(WriteData);
   static NAN_METHOD(SendExitStatus);
   static NAN_METHOD(Close);

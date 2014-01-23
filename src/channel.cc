@@ -118,7 +118,7 @@ void Channel::CloseChannel () {
     ssh_channel_free(channel);
     if (channelClosedCallback)
       channelClosedCallback(this, callbackUserData);
-    TryRead(); // not really a read, just flush the msg buffer
+    //TryRead(); // not really a read, just flush the msg buffer
                // otherwise the channel may just hang
     closed = true;
     OnClose();
@@ -267,6 +267,7 @@ void Channel::Init () {
   NanAssignPersistent(v8::FunctionTemplate, channel_constructor, tpl);
   tpl->SetClassName(NanSymbol("Channel"));
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "start", Start);
   NODE_SET_PROTOTYPE_METHOD(tpl, "writeData", WriteData);
   NODE_SET_PROTOTYPE_METHOD(tpl, "sendEof", SendEof);
   NODE_SET_PROTOTYPE_METHOD(tpl, "sendExitStatus", SendExitStatus);
@@ -286,14 +287,22 @@ v8::Handle<v8::Object> Channel::NewInstance (
   v8::Local<v8::FunctionTemplate> constructorHandle =
       NanPersistentToLocal(channel_constructor);
   instance = constructorHandle->GetFunction()->NewInstance(0, NULL);
-  Channel *s = ObjectWrap::Unwrap<Channel>(instance);
-  s->channel = channel;
-  s->session = session;
-  s->channelClosedCallback = channelClosedCallback;
-  s->callbackUserData = callbackUserData;
-  s->SetupCallbacks(true);
+  Channel *c = ObjectWrap::Unwrap<Channel>(instance);
+  c->channel = channel;
+  c->session = session;
+  c->channelClosedCallback = channelClosedCallback;
+  c->callbackUserData = callbackUserData;
 
   return scope.Close(instance);
+}
+
+NAN_METHOD(Channel::Start) {
+  NanScope();
+
+  Channel *c = ObjectWrap::Unwrap<Channel>(args.This());
+  c->SetupCallbacks(false);
+
+  NanReturnUndefined();
 }
 
 NAN_METHOD(Channel::New) {
@@ -343,7 +352,8 @@ NAN_METHOD(Channel::SendEof) {
 
   //TODO: async
   Channel* c = node::ObjectWrap::Unwrap<Channel>(args.This());
-  ssh_channel_send_eof(c->channel);
+  if (!c->closed)
+    ssh_channel_send_eof(c->channel);
 
   if (NSSH_DEBUG)
     std::cout << "ssh_channel_send_eof()\n";

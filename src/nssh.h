@@ -4,11 +4,9 @@
 #ifndef NSSH_H
 #define NSSH_H
 
-#include <node.h>
-//#include <node_buffer.h>
 #include <nan.h>
 
-#define NSSH_DEBUG true
+#define NSSH_DEBUG false
 //#define cout cerr
 
 #endif
