@@ -1,8 +1,11 @@
 {
   "name": "ssh",
   "description": "A Node.js binding for libssh",
-  "contributors": [
-    "Rod Vagg <r@va.gg> (https://github.com/rvagg)"
+  "maintainers": [
+    "Rod Vagg <r@va.gg> (https://github.com/rvagg)",
+    "Brian White <mscdex@mscdex.net> (https://github.com/mscdex)",
+    "Audrius Butkevicius <audrius.butkevicius@gmail.com> (https://github.com/AudriusButkevicius)",
+    "Darius Clark <darius@shouthost.org> (https://github.com/dariusc93)"
   ],
   "keywords": [
     "ssh",

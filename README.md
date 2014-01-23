@@ -312,12 +312,21 @@ node-libssh is an **OPEN Open Source Project**. This means that:
 
 See the [CONTRIBUTING.md](https://github.com/rvagg/node-libssh/blob/master/CONTRIBUTING.md) file for more details.
 
+<a name="maintainers"></a>
+Maintainers
+-----------
+ * Rod Vagg [@rvagg](https://github.com/rvagg)
+ * Brian White [@mscdex](https://github.com/mscdex)
+ * Audrius Butkevicius
+   [@AudriusButkevicius](https://github.com/AudriusButkevicius)
+ * Darius Clark [@dariusc93](https://github.com/dariusc93)
+
 
 <a name="licence"></a>
 Licence &amp; copyright
 -------------------
 
-Copyright (c) 2013 Rod Vagg
+Copyright (c) 2013-2014 Rod Vagg and Maintainers (above)
 
 node-libssh is licensed under an MIT +no-false-attribs license. All rights not explicitly granted in the MIT license are reserved. See the included LICENSE file for more details.
 
