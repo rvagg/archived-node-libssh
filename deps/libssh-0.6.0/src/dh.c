@@ -216,12 +216,8 @@ void ssh_crypto_finalize(void) {
     bignum_free(p_group14);
     p_group14 = NULL;
 #ifdef HAVE_LIBGCRYPT
-    printf("HAVE_LIBGCRYPT!\n");
-    fflush(stdout);
     gcry_control(GCRYCTL_TERM_SECMEM);
 #elif defined HAVE_LIBCRYPTO
-    printf("HAVE_LIBCRYPTO!\n");
-    fflush(stdout);
     EVP_cleanup();
     CRYPTO_cleanup_all_ex_data();
 #endif
