@@ -55,13 +55,15 @@ void IncomingConnectionCallback (ssh_bind sshbind, void *userdata) {
 }
 
 Server::Server (char *port, char *rsaHostKey, char *dsaHostKey) {
+  running = false;
+
   if (ssh_init()) {
     std::cerr << "ERROR: ssh_init failed";
     return;
   }
 
   this->port = port;
-  running = false;
+
   if (NSSH_DEBUG)
     std::cerr << "Server::Server running=false " << port << "\n";
 
