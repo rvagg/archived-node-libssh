@@ -96,8 +96,10 @@ test('test standard password connection', function (t) {
 
       fs.createReadStream(testfile)
         .on('close', function () {
-          channel.close()
-          setTimeout(connection.end.bind(connection), 50)
+          setTimeout(function () {
+            channel.close()
+          }, 100)
+          setTimeout(connection.end.bind(connection), 200)
         })
         .pipe(channel)
       channel.pipe(bl(function (err, data) {
