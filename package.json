@@ -18,7 +18,8 @@
     "tap": "*",
     "ssh2": "*",
     "bl": "*",
-    "node-gyp": "~0.12.1"
+    "node-gyp": "~0.12.1",
+    "pty.js": "~0.2.3"
   },
   "repository": {
     "type": "git",

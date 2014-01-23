@@ -8,7 +8,7 @@
 //#include <node_buffer.h>
 #include <nan.h>
 
-#define NSSH_DEBUG false
+#define NSSH_DEBUG true
 //#define cout cerr
 
 #endif

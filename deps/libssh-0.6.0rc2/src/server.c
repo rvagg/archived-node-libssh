@@ -564,6 +564,8 @@ int ssh_handle_key_exchange(ssh_session session) {
         ssh_server_kex_termination,session);
     SSH_LOG(SSH_LOG_PACKET, "ssh_handle_key_exchange: current state : %d",
         session->session_state);
+    printf("rc=%d\n", rc);
+    fflush(stdout);
     if (rc != SSH_OK)
       return rc;
     if (session->session_state == SSH_SESSION_STATE_ERROR ||

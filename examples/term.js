@@ -1,6 +1,6 @@
 const libssh = require('../')
     , fs     = require('fs')
-    , spawn  = require('child_process').spawn
+    , pty    = require('pty.js')
 
 // connect with ssh -p 3333 localhost -i ../test/keys/id_rsa <cmd>
 // where '<cmd>' is a command that can be executed on the server
@@ -22,15 +22,25 @@ server.on('connection', function (session) {
   })
 
   session.on('channel', function (channel) {
-    channel.on('exec', function (message) {
-      message.replySuccess() // a success reply is needed before we send output
+    channel.on('pty', function(message) {
+      message.replySuccess()
+    })
 
-      var child = spawn('/bin/bash', ['-c', message.execCommand])
+    channel.on('shell', function(message) {
+      message.replySuccess()
 
-      child.stdout.pipe(channel)
-      channel.pipe(child.stdin)
+      var term = pty.spawn('bash', [], {
+        name: 'xterm-color',
+        cols: 80,
+        rows: 30,
+        cwd: process.env.HOME,
+        env: process.env
+      });
 
-      child.on('close', function (code) {
+      channel.pipe(term)
+      term.pipe(channel)
+
+      term.on('exit', function (code) {
         channel.sendExitStatus(code)
         channel.close()
       })
