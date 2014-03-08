@@ -22,25 +22,35 @@ server.on('connection', function (session) {
   })
 
   session.on('channel', function (channel) {
+    channel.on('windowchange', function(message) {
+      message.replySuccess()
+      session.ptyWidth = message.ptyWidth
+      session.ptyHeight = message.ptyHeight
+      session.term.resize(message.ptyWidth, message.ptyHeight)
+    })
+
     channel.on('pty', function(message) {
       message.replySuccess()
+      session.ptyWidth = message.ptyWidth
+      session.ptyHeight = message.ptyHeight
+      session.ptyTerm = message.ptyTerm
     })
 
     channel.on('shell', function(message) {
       message.replySuccess()
 
-      var term = pty.spawn('bash', [], {
-        name: 'xterm-color',
-        cols: 80,
-        rows: 30,
+      session.term = pty.spawn('bash', [], {
+        name: session.ptyTerm,
+        cols: session.ptyWidth,
+        rows: session.ptyHeight,
         cwd: process.env.HOME,
         env: process.env
       });
 
-      channel.pipe(term)
-      term.pipe(channel)
+      channel.pipe(session.term)
+      session.term.pipe(channel)
 
-      term.on('exit', function (code) {
+      session.term.on('exit', function (code) {
         channel.sendExitStatus(code)
         channel.close()
       })
