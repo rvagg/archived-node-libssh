@@ -178,6 +178,11 @@ v8::Handle<v8::Object> Message::NewInstance (
       const char *term = ssh_message_channel_request_pty_term(message);
       if (term)
         instance->Set(NanSymbol("ptyTerm"), v8::String::New(term));
+    } else if (subtype == SSH_CHANNEL_REQUEST_WINDOW_CHANGE) {
+      instance->Set(NanSymbol("ptyWidth"),
+          v8::Integer::New(ssh_message_channel_request_pty_width(message)));
+      instance->Set(NanSymbol("ptyHeight"),
+          v8::Integer::New(ssh_message_channel_request_pty_height(message)));
     }
   }
 
