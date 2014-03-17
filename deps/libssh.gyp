@@ -74,6 +74,8 @@
       , 'libssh-<(libsshversion)/src/config.c'
       , 'libssh-<(libsshversion)/src/connect.c'
       , 'libssh-<(libsshversion)/src/crc32.c'
+      , 'libssh-<(libsshversion)/src/curve25519.c'
+      , 'libssh-<(libsshversion)/src/curve25519_ref.c'
       , 'libssh-<(libsshversion)/src/dh.c'
       , 'libssh-<(libsshversion)/src/ecdh.c'
       , 'libssh-<(libsshversion)/src/error.c'
@@ -111,7 +113,5 @@
       , 'libssh-<(libsshversion)/src/string.c'
       , 'libssh-<(libsshversion)/src/threads.c'
       , 'libssh-<(libsshversion)/src/wrapper.c'
-      , 'libssh-<(libsshversion)/src/curve25519.c'
-      , 'libssh-<(libsshversion)/src/curve25519_ref.c'
     ]
 }]}
