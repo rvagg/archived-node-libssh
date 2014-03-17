@@ -111,5 +111,7 @@
       , 'libssh-<(libsshversion)/src/string.c'
       , 'libssh-<(libsshversion)/src/threads.c'
       , 'libssh-<(libsshversion)/src/wrapper.c'
+      , 'libssh-<(libsshversion)/src/curve25519.c'
+      , 'libssh-<(libsshversion)/src/curve25519_ref.c'
     ]
 }]}
