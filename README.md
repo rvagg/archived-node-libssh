@@ -262,7 +262,7 @@ server.on('connection', function (session) {
 })
 ```
 
-See *[trickysftp.js](https://github.com/rvagg/node-libssh/blob/master/examples/stdiopipe.js)* in the examples directory if you want to try this out.
+See *[trickysftp.js](https://github.com/rvagg/node-libssh/blob/master/examples/trickysftp.js)* in the examples directory if you want to try this out.
 
 SFTP events include:
 
