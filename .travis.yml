@@ -8,3 +8,4 @@ notifications:
   email:
     - rod@vagg.org
 script: npm test
+version: 1
