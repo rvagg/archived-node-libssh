@@ -19,7 +19,7 @@ class Server : public node::ObjectWrap {
   static void Init ();
   static NAN_METHOD(NewInstance);
 
-  Server (char *port, char *rsaHostKey, char *dsaHostKey);
+  Server (char *port, char *rsaHostKey, char *dsaHostKey, char *banner);
   ~Server ();
 
   void OnConnection (v8::Handle<v8::Object> session);

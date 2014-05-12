@@ -20,8 +20,8 @@ NAN_METHOD(Server::NewInstance) {
   v8::Local<v8::Object> instance;
   v8::Local<v8::FunctionTemplate> constructorHandle =
       NanPersistentToLocal(server_constructor);
-  v8::Handle<v8::Value> argv[] = { args[0], args[1], args[2] };
-  instance = constructorHandle->GetFunction()->NewInstance(3, argv);
+  v8::Handle<v8::Value> argv[] = { args[0], args[1], args[2], args[3] };
+  instance = constructorHandle->GetFunction()->NewInstance(4, argv);
 
   NanReturnValue(instance);
 }
@@ -54,7 +54,7 @@ void IncomingConnectionCallback (ssh_bind sshbind, void *userdata) {
   if (NSSH_DEBUG) std::cout << "IncomingConnectionCallback\n";
 }
 
-Server::Server (char *port, char *rsaHostKey, char *dsaHostKey) {
+Server::Server (char *port, char *rsaHostKey, char *dsaHostKey, char *banner) {
   running = false;
 
   if (ssh_init()) {
@@ -71,6 +71,7 @@ Server::Server (char *port, char *rsaHostKey, char *dsaHostKey) {
   ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_RSAKEY, rsaHostKey);
   ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_DSAKEY, dsaHostKey);
   ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDPORT_STR, port);
+  ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BANNER, banner);
   //delete rsaHostKey;
   //delete dsaHostKey;
   //delete port;
@@ -195,7 +196,17 @@ NAN_METHOD(Server::New) {
     , 0
     , v8::String::NO_OPTIONS
   );
-  Server* obj = new Server(port, rsaHostKey, dsaHostKey);
+
+  char *banner = NanFromV8String(
+      args[3].As<v8::Object>()
+    , Nan::UTF8
+    , NULL
+    , NULL
+    , 0
+    , v8::String::NO_OPTIONS
+  );
+
+  Server* obj = new Server(port, rsaHostKey, dsaHostKey, banner);
   obj->Wrap(args.This());
 
   NanReturnValue(args.This());
