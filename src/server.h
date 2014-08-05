@@ -19,7 +19,7 @@ class Server : public node::ObjectWrap {
   static void Init ();
   static NAN_METHOD(NewInstance);
 
-  Server (char *port, char *rsaHostKey, char *dsaHostKey, char *banner);
+  Server (char *port, char *addr, char *rsaHostKey, char *dsaHostKey, char *banner);
   ~Server ();
 
   void OnConnection (v8::Handle<v8::Object> session);
@@ -34,6 +34,7 @@ class Server : public node::ObjectWrap {
   v8::Persistent<v8::Object> persistentHandle;
   bool running;
   char* port;
+  char* addr;
 
   static NAN_METHOD(New);
   static NAN_METHOD(Close);
