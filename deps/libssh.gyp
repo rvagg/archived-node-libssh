@@ -44,14 +44,31 @@
            'include_dirs': [
                'include-osx/'
            ]
+         , 'sources': [
+               'libssh-<(libsshversion)/src/gssapi.c'
+           ]
          , 'direct_dependent_settings': {
                'include_dirs': [
                    'include-osx/'
                ]
            }
-       }, { # OS != "mac"
+       }]
+     , ['OS == "win"', {
+           'include_dirs': [
+               'include-win/'
+           ]
+         , 'direct_dependent_settings': {
+               'include_dirs': [
+                   'include-win/'
+               ]
+           }
+       }]      
+     , ['OS != "win" and OS != "mac"', {
            'include_dirs': [
                'include/'
+           ]
+         , 'sources': [
+               'libssh-<(libsshversion)/src/gssapi.c'
            ]
          , 'direct_dependent_settings': {
                'include_dirs': [
@@ -81,7 +98,6 @@
       , 'libssh-<(libsshversion)/src/error.c'
       , 'libssh-<(libsshversion)/src/gcrypt_missing.c'
       , 'libssh-<(libsshversion)/src/getpass.c'
-      , 'libssh-<(libsshversion)/src/gssapi.c'
       , 'libssh-<(libsshversion)/src/gzip.c'
       , 'libssh-<(libsshversion)/src/init.c'
       , 'libssh-<(libsshversion)/src/kex1.c'
