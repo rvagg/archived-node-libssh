@@ -3,6 +3,7 @@
  */
 
 #include <node.h>
+#include <nan.h>
 
 #include "nssh.h"
 #include "server.h"
@@ -20,8 +21,8 @@ void Init (v8::Handle<v8::Object> target) {
   SftpMessage::Init();
 
   v8::Local<v8::Function> Server
-      = v8::FunctionTemplate::New(Server::NewInstance)->GetFunction();
-  target->Set(NanSymbol("Server"), Server);
+      = NanNew<v8::FunctionTemplate>(Server::NewInstance)->GetFunction();
+  target->Set(NanNew<v8::String>("Server"), Server);
 }
 
 NODE_MODULE(ssh, Init)

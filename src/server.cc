@@ -18,8 +18,7 @@ NAN_METHOD(Server::NewInstance) {
   NanScope();
 
   v8::Local<v8::Object> instance;
-  v8::Local<v8::FunctionTemplate> constructorHandle =
-      NanPersistentToLocal(server_constructor);
+  v8::Local<v8::FunctionTemplate> constructorHandle = NanNew(server_constructor);
   v8::Handle<v8::Value> argv[] = { args[0], args[1], args[2], args[3], args[4]};
   instance = constructorHandle->GetFunction()->NewInstance(5, argv);
 
@@ -148,7 +147,7 @@ void Server::OnConnection (v8::Handle<v8::Object> session) {
   NanScope();
 
   v8::Local<v8::Value> callback = NanObjectWrapHandle(this)
-      ->Get(NanSymbol("onConnection"));
+      ->Get(NanNew<v8::String>("onConnection"));
   if (callback->IsFunction()) {
     v8::TryCatch try_catch;
     v8::Handle<v8::Value> argv[] = { session };
@@ -161,9 +160,9 @@ void Server::OnConnection (v8::Handle<v8::Object> session) {
 void Server::Init () {
   NanScope();
 
-  v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(New);
-  NanAssignPersistent(v8::FunctionTemplate, server_constructor, tpl);
-  tpl->SetClassName(NanSymbol("Server"));
+  v8::Local<v8::FunctionTemplate> tpl = NanNew<v8::FunctionTemplate>(New);
+  NanAssignPersistent(server_constructor, tpl);
+  tpl->SetClassName(NanNew<v8::String>("Server"));
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
   NODE_SET_PROTOTYPE_METHOD(tpl, "close", Close);
 }
@@ -174,49 +173,13 @@ NAN_METHOD(Server::New) {
   if (args.Length() == 0)
     return NanThrowError("constructor requires at least a port argument");
 
-  char *port = NanFromV8String(
-      args[0]->ToString()
-    , Nan::UTF8
-    , NULL
-    , NULL
-    , 0
-    , v8::String::NO_OPTIONS
-  );
-  char *addr = NanFromV8String(
-      args[1].As<v8::Object>()
-    , Nan::UTF8
-    , NULL
-    , NULL
-    , 0
-    , v8::String::NO_OPTIONS
-  );
-  char *rsaHostKey = NanFromV8String(
-      args[2].As<v8::Object>()
-    , Nan::UTF8
-    , NULL
-    , NULL
-    , 0
-    , v8::String::NO_OPTIONS
-  );
-  char *dsaHostKey = NanFromV8String(
-      args[3].As<v8::Object>()
-    , Nan::UTF8
-    , NULL
-    , NULL
-    , 0
-    , v8::String::NO_OPTIONS
-  );
+  v8::String::Utf8Value port(args[0]);
+  v8::String::Utf8Value addr(args[1]);
+  v8::String::Utf8Value rsaHostKey(args[2]);
+  v8::String::Utf8Value dsaHostKey(args[3]);
+  v8::String::Utf8Value banner(args[4]);
 
-  char *banner = NanFromV8String(
-      args[4].As<v8::Object>()
-    , Nan::UTF8
-    , NULL
-    , NULL
-    , 0
-    , v8::String::NO_OPTIONS
-  );
-
-  Server* obj = new Server(port, addr, rsaHostKey, dsaHostKey, banner);
+  Server* obj = new Server(*port, *addr, *rsaHostKey, *dsaHostKey, *banner);
   obj->Wrap(args.This());
 
   NanReturnValue(args.This());
@@ -227,9 +190,9 @@ NAN_METHOD(Server::Close) {
 
   Server *s = ObjectWrap::Unwrap<Server>(args.This());
   s->Close();
-  s->persistentHandle.Dispose();
+  NanDisposePersistent(s->persistentHandle);
 
-  NanReturnValue(v8::Undefined());
+  NanReturnUndefined();
 }
 
 } // namespace nssh

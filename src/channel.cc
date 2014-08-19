@@ -196,7 +196,7 @@ void Channel::OnMessage (v8::Handle<v8::Object> mess) {
     std::cout << "Channel::OnMessage\n";
 
   v8::Local<v8::Value> callback = NanObjectWrapHandle(this)
-      ->Get(NanSymbol("onMessage"));
+      ->Get(NanNew<v8::String>("onMessage"));
 
   if (callback->IsFunction()) {
     v8::TryCatch try_catch;
@@ -215,7 +215,7 @@ void Channel::OnSftpMessage (v8::Handle<v8::Object> mess) {
     std::cout << "Channel::OnSftpMessage\n";
 
   v8::Local<v8::Value> callback = NanObjectWrapHandle(this)
-      ->Get(NanSymbol("onSftpMessage"));
+      ->Get(NanNew<v8::String>("onSftpMessage"));
 
   if (callback->IsFunction()) {
     v8::TryCatch try_catch;
@@ -231,7 +231,7 @@ void Channel::OnData (const char *data, int length) {
   NanScope();
 
   v8::Local<v8::Value> callback = NanObjectWrapHandle(this)
-      ->Get(NanSymbol("onData"));
+      ->Get(NanNew<v8::String>("onData"));
 
   if (callback->IsFunction()) {
     v8::TryCatch try_catch;
@@ -250,7 +250,7 @@ void Channel::OnClose () {
   NanScope();
 
   v8::Local<v8::Value> callback = NanObjectWrapHandle(this)
-      ->Get(NanSymbol("onClose"));
+      ->Get(NanNew<v8::String>("onClose"));
 
   if (callback->IsFunction()) {
     v8::TryCatch try_catch;
@@ -263,9 +263,9 @@ void Channel::OnClose () {
 void Channel::Init () {
   NanScope();
 
-  v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(New);
-  NanAssignPersistent(v8::FunctionTemplate, channel_constructor, tpl);
-  tpl->SetClassName(NanSymbol("Channel"));
+  v8::Local<v8::FunctionTemplate> tpl = NanNew<v8::FunctionTemplate>(New);
+  NanAssignPersistent(channel_constructor, tpl);
+  tpl->SetClassName(NanNew<v8::String>("Channel"));
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
   NODE_SET_PROTOTYPE_METHOD(tpl, "start", Start);
   NODE_SET_PROTOTYPE_METHOD(tpl, "writeData", WriteData);
@@ -281,11 +281,10 @@ v8::Handle<v8::Object> Channel::NewInstance (
     , void *callbackUserData
   ) {
 
-  NanScope();
+  NanEscapableScope();
 
   v8::Local<v8::Object> instance;
-  v8::Local<v8::FunctionTemplate> constructorHandle =
-      NanPersistentToLocal(channel_constructor);
+  v8::Local<v8::FunctionTemplate> constructorHandle = NanNew(channel_constructor);
   instance = constructorHandle->GetFunction()->NewInstance(0, NULL);
   Channel *c = ObjectWrap::Unwrap<Channel>(instance);
   c->channel = channel;
@@ -293,7 +292,7 @@ v8::Handle<v8::Object> Channel::NewInstance (
   c->channelClosedCallback = channelClosedCallback;
   c->callbackUserData = callbackUserData;
 
-  return scope.Close(instance);
+  return NanEscapeScope(instance);
 }
 
 NAN_METHOD(Channel::Start) {
