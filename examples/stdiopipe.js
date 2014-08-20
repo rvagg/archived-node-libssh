@@ -59,5 +59,5 @@ server.on('connection', function (session) {
   })
 })
 
-server.listen(3333)
-console.log('Listening on port 3333')
+server.listen(3333, '127.0.0.1')
+console.log('Listening on port 127.0.0.1:3333')

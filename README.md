@@ -73,7 +73,8 @@ server.on('connection', function (session) {
   })
 })
 
-server.listen(3333)
+server.listen(3333, '127.0.0.1')		// required port and optional ipv4 address interface defaults to 0.0.0.0
+console.log('Listening on port 127.0.0.1:3333')
 ```
 
 See *[stdiopipe.js](https://github.com/rvagg/node-libssh/blob/master/examples/stdiopipe.js)* in the examples directory if you want to try this out.

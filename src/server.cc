@@ -20,8 +20,8 @@ NAN_METHOD(Server::NewInstance) {
   v8::Local<v8::Object> instance;
   v8::Local<v8::FunctionTemplate> constructorHandle =
       NanPersistentToLocal(server_constructor);
-  v8::Handle<v8::Value> argv[] = { args[0], args[1], args[2], args[3] };
-  instance = constructorHandle->GetFunction()->NewInstance(4, argv);
+  v8::Handle<v8::Value> argv[] = { args[0], args[1], args[2], args[3], args[4]};
+  instance = constructorHandle->GetFunction()->NewInstance(5, argv);
 
   NanReturnValue(instance);
 }
@@ -54,7 +54,7 @@ void IncomingConnectionCallback (ssh_bind sshbind, void *userdata) {
   if (NSSH_DEBUG) std::cout << "IncomingConnectionCallback\n";
 }
 
-Server::Server (char *port, char *rsaHostKey, char *dsaHostKey, char *banner) {
+Server::Server (char *port, char *addr, char *rsaHostKey, char *dsaHostKey, char *banner) {
   running = false;
 
   if (ssh_init()) {
@@ -63,13 +63,15 @@ Server::Server (char *port, char *rsaHostKey, char *dsaHostKey, char *banner) {
   }
 
   this->port = port;
+  this->addr = addr;
 
   if (NSSH_DEBUG)
-    std::cerr << "Server::Server running=false " << port << "\n";
+    std::cerr << "Server::Server running=false " << addr << ":" << port << "\n";
 
   sshbind = ssh_bind_new();
   ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_RSAKEY, rsaHostKey);
   ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_DSAKEY, dsaHostKey);
+  ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDADDR, addr);
   ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDPORT_STR, port);
   ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BANNER, banner);
   //delete rsaHostKey;
@@ -110,7 +112,7 @@ Server::Server (char *port, char *rsaHostKey, char *dsaHostKey, char *banner) {
   uv_poll_start(poll_handle, UV_READABLE, Server::SocketPollCallback);
   running = true;
   if (NSSH_DEBUG)
-    std::cerr << "Server::Server running=true " << port << "\n";
+    std::cerr << "Server::Server running=true " << addr << ":" << port << "\n";
 
   if (NSSH_DEBUG) std::cout << "Server::Server done\n";
 }
@@ -126,7 +128,7 @@ void Server::Close () {
   if (running) {
     running = false;
     if (NSSH_DEBUG)
-      std::cerr << "Server::Close running=false " << port << "\n";
+      std::cerr << "Server::Close running=false " << addr << ":" << port << "\n";
     //std::cerr << "+++ Server::Close running=false " << port << ", " << poll_handle->loop << "\n";
     uv_poll_stop(poll_handle);
     delete poll_handle;
@@ -180,7 +182,7 @@ NAN_METHOD(Server::New) {
     , 0
     , v8::String::NO_OPTIONS
   );
-  char *rsaHostKey = NanFromV8String(
+  char *addr = NanFromV8String(
       args[1].As<v8::Object>()
     , Nan::UTF8
     , NULL
@@ -188,7 +190,7 @@ NAN_METHOD(Server::New) {
     , 0
     , v8::String::NO_OPTIONS
   );
-  char *dsaHostKey = NanFromV8String(
+  char *rsaHostKey = NanFromV8String(
       args[2].As<v8::Object>()
     , Nan::UTF8
     , NULL
@@ -196,8 +198,7 @@ NAN_METHOD(Server::New) {
     , 0
     , v8::String::NO_OPTIONS
   );
-
-  char *banner = NanFromV8String(
+  char *dsaHostKey = NanFromV8String(
       args[3].As<v8::Object>()
     , Nan::UTF8
     , NULL
@@ -206,7 +207,16 @@ NAN_METHOD(Server::New) {
     , v8::String::NO_OPTIONS
   );
 
-  Server* obj = new Server(port, rsaHostKey, dsaHostKey, banner);
+  char *banner = NanFromV8String(
+      args[4].As<v8::Object>()
+    , Nan::UTF8
+    , NULL
+    , NULL
+    , 0
+    , v8::String::NO_OPTIONS
+  );
+
+  Server* obj = new Server(port, addr, rsaHostKey, dsaHostKey, banner);
   obj->Wrap(args.This());
 
   NanReturnValue(args.This());
