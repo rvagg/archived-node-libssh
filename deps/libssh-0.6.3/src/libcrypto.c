@@ -23,7 +23,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#ifndef _MSC_VER
 #include <sys/time.h>
+#endif
 
 #include "libssh/priv.h"
 #include "libssh/session.h"

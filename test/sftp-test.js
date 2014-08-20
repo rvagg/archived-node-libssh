@@ -76,6 +76,17 @@ test('test sftp', function (t) {
         message.replyAttr(makefakeattr(Stat('750').dir()))
       }
     })
+    channel.on('sftp:fstat', function (message) {
+      if (message.filename == testfile || message.handle == testfile) {
+        // special case prior to READ the test file
+        var attr = makefakeattr(Stat(644).reg())
+        attr.size = fs.statSync(testfile).size
+        message.replyAttr(attr)
+      } else {
+        t.equal(message.filename, '.')
+        message.replyAttr(makefakeattr(Stat('750').dir()))
+      }
+    })
     channel.on('sftp:lstat', function (message) {
       t.equal(message.filename, '/foo/bar/')
       message.replyAttr(makefakeattr(Stat('755').dir()))

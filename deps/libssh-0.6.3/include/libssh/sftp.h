@@ -53,7 +53,8 @@ extern "C" {
   typedef uint32_t gid_t;
 #endif /* gid_t */
 #ifdef _MSC_VER
-#ifndef ssize_t
+//#ifndef ssize_t
+#if !defined(_SSIZE_T_) && !defined(_SSIZE_T_DEFINED) && !defined(ssize_t)
   typedef _W64 SSIZE_T ssize_t;
 #endif /* ssize_t */
 #endif /* _MSC_VER */
