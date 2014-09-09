@@ -7,8 +7,7 @@
     # Overcomes an issue with the linker and thin .a files on SmartOS
   , 'standalone_static_library': 1
   , 'defines': [
-        'SOURCEDIR=<!(pwd)/libssh-<(libsshversion)/'
-      , 'BINARYDIR=<(PRODUCT_DIR)'
+        'BINARYDIR=<(PRODUCT_DIR)'
     ]
   , 'include_dirs': [
         'libssh-<(libsshversion)/include/'
@@ -62,6 +61,13 @@
                    'include-win/'
                ]
            }
+         , 'defines': [
+              'SOURCEDIR=<!(cd)/libssh-<(libsshversion)/'
+          ]
+       }, {
+           'defines': [
+              'SOURCEDIR=<!(pwd)/libssh-<(libsshversion)/'
+          ]
        }]      
      , ['OS != "win" and OS != "mac"', {
            'include_dirs': [
