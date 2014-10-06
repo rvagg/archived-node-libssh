@@ -190,6 +190,12 @@ void Session::SocketPollCallback (uv_poll_t* handle, int status, int events) {
 
   if (NSSH_DEBUG)
     std::cout << "Channel Data: " << (channelData ? "yes" : "no") << std::endl;
+
+  if (ssh_get_status(s->session) & SSH_CLOSED_ERROR) {
+    if (NSSH_DEBUG)
+      std::cout << "session status is SSH_CLOSED_ERROR, closing2\n";
+    return s->Close();
+  }
 }
 
 Session::Session () {
@@ -205,7 +211,7 @@ Session::~Session () {
 void Session::Close () {
   active = false;
   uv_poll_stop(poll_handle);
-  //delete poll_handle;
+  delete poll_handle;
   ssh_set_callbacks(session, 0);
   ssh_set_message_callback(session, 0, 0);
   //TODO: investigate whether this is needed in some way, it doesn't
