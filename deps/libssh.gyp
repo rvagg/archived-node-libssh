@@ -1,7 +1,7 @@
 {'targets': [{
     'target_name': 'libssh'
   , 'variables': {
-        'libsshversion': '0.6.3'
+        'libsshversion': '0.6.4'
     }
   , 'type': 'static_library'
     # Overcomes an issue with the linker and thin .a files on SmartOS
