@@ -200,7 +200,7 @@ v8::Handle<v8::Object> SftpMessage::NewInstance (
           (const char *)message->handle->data
         , ssh_string_len(message->handle))
       );
-      instance->Set(NanNew<v8::String>("offset"), NanNew<v8::Integer>(message->offset));
+      instance->Set(NanNew<v8::String>("offset"), NanNew<v8::Number>(message->offset));
       instance->Set(NanNew<v8::String>("length"), NanNew<v8::Integer>(message->len));
       break;
     case SSH_FXP_WRITE:
@@ -211,7 +211,7 @@ v8::Handle<v8::Object> SftpMessage::NewInstance (
       if (NSSH_DEBUG)
         std::cout << "read `data`, " << ssh_string_len(message->data)
           << " bytes\n";
-      instance->Set(NanNew<v8::String>("offset"), NanNew<v8::Integer>(message->offset));
+      instance->Set(NanNew<v8::String>("offset"), NanNew<v8::Number>(message->offset));
       instance->Set(NanNew<v8::String>("data"), NanNewBufferHandle(
           (char *)ssh_string_get_char(message->data)
         , ssh_string_len(message->data)
