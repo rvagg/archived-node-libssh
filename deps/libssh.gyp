@@ -51,6 +51,12 @@
                    'include-osx/'
                ]
            }
+         , 'xcode_settings': {
+               'OTHER_CPLUSPLUSFLAGS': ['-std=c++11', '-stdlib=libc++']
+             , 'GCC_ENABLE_CPP_EXCEPTIONS': 'YES'
+             , 'MACOSX_DEPLOYMENT_TARGET': '10.8'
+           }
+         , 'defines': ['HAVE_NTOHLL']
        }]
      , ['OS == "win"', {
            'include_dirs': [
