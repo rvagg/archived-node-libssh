@@ -17,33 +17,33 @@ v8::Persistent<v8::FunctionTemplate> sftpmessage_constructor;
 inline uint32_t StringToStatusCode (v8::Handle<v8::String> str) {
   NanScope();
 
-  if (str->Equals(NanSymbol("ok"))) {
+  if (str->Equals(NanNew<v8::String>("ok"))) {
     return SSH_FX_OK;
-  } else if (str->Equals(NanSymbol("eof"))) {
+  } else if (str->Equals(NanNew<v8::String>("eof"))) {
     return SSH_FX_EOF;
-  } else if (str->Equals(NanSymbol("noSuchFile"))) {
+  } else if (str->Equals(NanNew<v8::String>("noSuchFile"))) {
     return SSH_FX_NO_SUCH_FILE;
-  } else if (str->Equals(NanSymbol("permissionDenied"))) {
+  } else if (str->Equals(NanNew<v8::String>("permissionDenied"))) {
     return SSH_FX_PERMISSION_DENIED;
-  } else if (str->Equals(NanSymbol("failure"))) {
+  } else if (str->Equals(NanNew<v8::String>("failure"))) {
     return SSH_FX_FAILURE;
-  } else if (str->Equals(NanSymbol("badMessage"))) {
+  } else if (str->Equals(NanNew<v8::String>("badMessage"))) {
     return SSH_FX_BAD_MESSAGE;
-  } else if (str->Equals(NanSymbol("noConnection"))) {
+  } else if (str->Equals(NanNew<v8::String>("noConnection"))) {
     return SSH_FX_NO_CONNECTION;
-  } else if (str->Equals(NanSymbol("connectionLost"))) {
+  } else if (str->Equals(NanNew<v8::String>("connectionLost"))) {
     return SSH_FX_CONNECTION_LOST;
-  } else if (str->Equals(NanSymbol("opUnsupported"))) {
+  } else if (str->Equals(NanNew<v8::String>("opUnsupported"))) {
     return SSH_FX_OP_UNSUPPORTED;
-  } else if (str->Equals(NanSymbol("invalidHandle"))) {
+  } else if (str->Equals(NanNew<v8::String>("invalidHandle"))) {
     return SSH_FX_INVALID_HANDLE;
-  } else if (str->Equals(NanSymbol("noSuchPath"))) {
+  } else if (str->Equals(NanNew<v8::String>("noSuchPath"))) {
     return SSH_FX_NO_SUCH_PATH;
-  } else if (str->Equals(NanSymbol("fileAlreadyExists"))) {
+  } else if (str->Equals(NanNew<v8::String>("fileAlreadyExists"))) {
     return SSH_FX_FILE_ALREADY_EXISTS;
-  } else if (str->Equals(NanSymbol("writeProtect"))) {
+  } else if (str->Equals(NanNew<v8::String>("writeProtect"))) {
     return SSH_FX_WRITE_PROTECT;
-  } else if (str->Equals(NanSymbol("noMedia"))) {
+  } else if (str->Equals(NanNew<v8::String>("noMedia"))) {
     return SSH_FX_NO_MEDIA;
 /*
   } else if (str->Equals(SftpNoSpaceOnFilesystemSymbol)) {
@@ -143,9 +143,9 @@ SftpMessage::~SftpMessage () {
 void SftpMessage::Init () {
   NanScope();
 
-  v8::Local<v8::FunctionTemplate> tpl = v8::FunctionTemplate::New(New);
-  NanAssignPersistent(v8::FunctionTemplate, sftpmessage_constructor, tpl);
-  tpl->SetClassName(NanSymbol("SftpMessage"));
+  v8::Local<v8::FunctionTemplate> tpl = NanNew<v8::FunctionTemplate>(New);
+  NanAssignPersistent(sftpmessage_constructor, tpl);
+  tpl->SetClassName(NanNew<v8::String>("SftpMessage"));
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
   NODE_SET_PROTOTYPE_METHOD(tpl, "replyName", ReplyName);
   NODE_SET_PROTOTYPE_METHOD(tpl, "replyNames", ReplyNames);
@@ -160,13 +160,12 @@ v8::Handle<v8::Object> SftpMessage::NewInstance (
     , Channel *channel
     , sftp_client_message message) {
 
-  NanScope();
+  NanEscapableScope();
 
   if (NSSH_DEBUG)
     std::cout << "SftpMessage::NewInstance\n";
 
-  v8::Local<v8::FunctionTemplate> constructorHandle =
-      NanPersistentToLocal(sftpmessage_constructor);
+  v8::Local<v8::FunctionTemplate> constructorHandle = NanNew(sftpmessage_constructor);
   v8::Local<v8::Object> instance =
       constructorHandle->GetFunction()->NewInstance(0, NULL);
 
@@ -179,9 +178,9 @@ v8::Handle<v8::Object> SftpMessage::NewInstance (
     std::cout << "SftpMessage::NewInstance got instance\n";
 
   const char *typeStr = MessageTypeToString(message->type);
-  instance->Set(NanSymbol("type"), typeStr == NULL
-    ? v8::Null().As<v8::Object>()
-    : v8::String::New(typeStr).As<v8::Object>()
+  instance->Set(NanNew<v8::String>("type"), typeStr == NULL
+    ? NanNull()->ToObject()
+    : NanNew<v8::String>(typeStr)->ToObject()
   );
 
   switch(message->type) {
@@ -191,29 +190,29 @@ v8::Handle<v8::Object> SftpMessage::NewInstance (
         std::cout << "SSH_FXP_READDIR: "
           << (const char *)message->handle->data << ":"
           << ssh_string_len(message->handle) << std::endl;
-      instance->Set(NanSymbol("handle"), v8::String::New(
+      instance->Set(NanNew<v8::String>("handle"), NanNew<v8::String>(
           (const char *)message->handle->data
         , ssh_string_len(message->handle))
       );
       break;
     case SSH_FXP_READ:
-      instance->Set(NanSymbol("handle"), v8::String::New(
+      instance->Set(NanNew<v8::String>("handle"), NanNew<v8::String>(
           (const char *)message->handle->data
         , ssh_string_len(message->handle))
       );
-      instance->Set(NanSymbol("offset"), v8::Integer::New(message->offset));
-      instance->Set(NanSymbol("length"), v8::Integer::New(message->len));
+      instance->Set(NanNew<v8::String>("offset"), NanNew<v8::Integer>(message->offset));
+      instance->Set(NanNew<v8::String>("length"), NanNew<v8::Integer>(message->len));
       break;
     case SSH_FXP_WRITE:
-      instance->Set(NanSymbol("handle"), v8::String::New(
+      instance->Set(NanNew<v8::String>("handle"), NanNew<v8::String>(
           (const char *)message->handle->data
         , ssh_string_len(message->handle))
       );
       if (NSSH_DEBUG)
         std::cout << "read `data`, " << ssh_string_len(message->data)
           << " bytes\n";
-      instance->Set(NanSymbol("offset"), v8::Integer::New(message->offset));
-      instance->Set(NanSymbol("data"), NanNewBufferHandle(
+      instance->Set(NanNew<v8::String>("offset"), NanNew<v8::Integer>(message->offset));
+      instance->Set(NanNew<v8::String>("data"), NanNewBufferHandle(
           (char *)ssh_string_get_char(message->data)
         , ssh_string_len(message->data)
       ));
@@ -223,21 +222,21 @@ v8::Handle<v8::Object> SftpMessage::NewInstance (
     case SSH_FXP_OPENDIR:
     case SSH_FXP_READLINK:
     case SSH_FXP_REALPATH:
-      instance->Set(NanSymbol("filename"), v8::String::New(
+      instance->Set(NanNew<v8::String>("filename"), NanNew<v8::String>(
           (const char *)message->filename));
       break;
     case SSH_FXP_RENAME:
     case SSH_FXP_SYMLINK:
-      instance->Set(NanSymbol("filename"), v8::String::New(
+      instance->Set(NanNew<v8::String>("filename"), NanNew<v8::String>(
           (const char *)message->filename));
-      instance->Set(NanSymbol("data"), v8::String::New(
+      instance->Set(NanNew<v8::String>("data"), NanNew<v8::String>(
           (const char *)message->handle->data
         , ssh_string_len(message->handle))
       );
       break;
     case SSH_FXP_MKDIR:
     case SSH_FXP_SETSTAT:
-      instance->Set(NanSymbol("filename"), v8::String::New(
+      instance->Set(NanNew<v8::String>("filename"), NanNew<v8::String>(
           (const char *)message->filename));
       /*TODO: attr struct..
       msg->attr = sftp_parse_attr(sftp, payload, 0);
@@ -249,7 +248,7 @@ v8::Handle<v8::Object> SftpMessage::NewInstance (
       */
       break;
     case SSH_FXP_FSETSTAT:
-      instance->Set(NanSymbol("handle"), v8::String::New(
+      instance->Set(NanNew<v8::String>("handle"), NanNew<v8::String>(
           (const char *)message->handle->data
         , ssh_string_len(message->handle))
       );
@@ -264,9 +263,9 @@ v8::Handle<v8::Object> SftpMessage::NewInstance (
       break;
     case SSH_FXP_LSTAT:
     case SSH_FXP_STAT:
-      instance->Set(NanSymbol("filename"), v8::String::New(
+      instance->Set(NanNew<v8::String>("filename"), NanNew<v8::String>(
           (const char *)message->filename));
-      instance->Set(NanSymbol("flags"), v8::Integer::New(message->flags));
+      instance->Set(NanNew<v8::String>("flags"), NanNew<v8::Integer>(message->flags));
       /* TODO: flags, array of strings? rwa?
       if(sftp->version > 3) {
         buffer_get_u32(payload,&msg->flags);
@@ -274,15 +273,15 @@ v8::Handle<v8::Object> SftpMessage::NewInstance (
       */
       break;
     case SSH_FXP_OPEN:
-      instance->Set(NanSymbol("filename"), v8::String::New(
+      instance->Set(NanNew<v8::String>("filename"), NanNew<v8::String>(
           (const char *)message->filename));
       if (NSSH_DEBUG)
         std::cout << "SSH_FXP_OPEN flags = " << message->flags << std::endl;
-      instance->Set(NanSymbol("handle"), v8::String::New(
+      instance->Set(NanNew<v8::String>("handle"), NanNew<v8::String>(
           (const char *)message->handle->data
         , ssh_string_len(message->handle))
       );
-      instance->Set(NanSymbol("flags"), v8::Integer::New(message->flags));
+      instance->Set(NanNew<v8::String>("flags"), NanNew<v8::Integer>(message->flags));
       //TODO: use node core style mode: http://nodejs.org/docs/latest/api/fs.html#fs_fs_open_path_flags_mode_callback
       /* TODO: flags, array of strings? rwa?
 #define SSH_FXF_READ 0x01
@@ -292,7 +291,7 @@ v8::Handle<v8::Object> SftpMessage::NewInstance (
 #define SSH_FXF_TRUNC 0x10
 #define SSH_FXF_EXCL 0x20
 #define SSH_FXF_TEXT 0x40
-      instance->Set(NanSymbol("flags"), v8::String::New(
+      instance->Set(NanNew<v8::String>("flags"), NanNew<v8::String>(
           (const char *)message->flags));
 
       buffer_get_u32(payload,&msg->flags);
@@ -307,15 +306,15 @@ v8::Handle<v8::Object> SftpMessage::NewInstance (
       */
       break;
     case SSH_FXP_FSTAT:
-      instance->Set(NanSymbol("handle"), v8::String::New(
+      instance->Set(NanNew<v8::String>("handle"), NanNew<v8::String>(
           (const char *)message->handle->data
         , ssh_string_len(message->handle))
       );
-      instance->Set(NanSymbol("flags"), v8::Integer::New(message->flags));
+      instance->Set(NanNew<v8::String>("flags"), NanNew<v8::Integer>(message->flags));
       break;
   }
 
-  return scope.Close(instance);
+  return NanEscapeScope(instance);
 }
 
 static inline bool HasStringProperty(
@@ -330,14 +329,8 @@ static inline char* GetStringProperty(
 
   NanScope();
 
-  return NanFromV8String(
-      object->Get(property).As<v8::Object>()
-    , Nan::UTF8
-    , NULL
-    , NULL
-    , 0
-    , v8::String::NO_OPTIONS
-  );
+  v8::String::Utf8Value prop(object->Get(property));
+  return *prop;
 }
 
 static inline bool HasIntegerProperty(
@@ -360,24 +353,24 @@ sftp_attributes ObjectToAttributes (v8::Local<v8::Object> attrObject) {
   sftp_attributes attr = new sftp_attributes_struct;
   attr->flags = 0;
 
-  if (HasStringProperty(attrObject, NanSymbol("filename"))) {
-    attr->name = GetStringProperty(attrObject, NanSymbol("filename")); //TODO: free
+  if (HasStringProperty(attrObject, NanNew<v8::String>("filename"))) {
+    attr->name = GetStringProperty(attrObject, NanNew<v8::String>("filename")); //TODO: free
     attr->longname = attr->name;
   }
 
-  if (HasStringProperty(attrObject, NanSymbol("type"))) {
+  if (HasStringProperty(attrObject, NanNew<v8::String>("type"))) {
     v8::Local<v8::String> type =
-        attrObject->Get(NanSymbol("type")).As<v8::String>();
+        attrObject->Get(NanNew<v8::String>("type")).As<v8::String>();
     attr->type = 0;
-    if (type->Equals(NanSymbol("regular")))
+    if (type->Equals(NanNew<v8::String>("regular")))
       attr->type = SSH_FILEXFER_TYPE_REGULAR;
-    else if (type->Equals(NanSymbol("directory")))
+    else if (type->Equals(NanNew<v8::String>("directory")))
       attr->type = SSH_FILEXFER_TYPE_DIRECTORY;
-    else if (type->Equals(NanSymbol("symlink")))
+    else if (type->Equals(NanNew<v8::String>("symlink")))
       attr->type = SSH_FILEXFER_TYPE_SYMLINK;
-    else if (type->Equals(NanSymbol("special")))
+    else if (type->Equals(NanNew<v8::String>("special")))
       attr->type = SSH_FILEXFER_TYPE_SPECIAL;
-    else if (type->Equals(NanSymbol("unknown")))
+    else if (type->Equals(NanNew<v8::String>("unknown")))
       attr->type = SSH_FILEXFER_TYPE_UNKNOWN;
     /*
     if (type->Equals(SftpSocketSymbol))
@@ -393,48 +386,48 @@ sftp_attributes ObjectToAttributes (v8::Local<v8::Object> attrObject) {
       std::cout << "attr->type = " << (uint32_t)attr->type << std::endl;
   }
 
-  if (HasIntegerProperty(attrObject, NanSymbol("size"))) {
-    attr->size = GetIntegerProperty(attrObject, NanSymbol("size"));
+  if (HasIntegerProperty(attrObject, NanNew<v8::String>("size"))) {
+    attr->size = GetIntegerProperty(attrObject, NanNew<v8::String>("size"));
     attr->flags |= SSH_FILEXFER_ATTR_SIZE;
   }
 
-  bool hasUid = HasIntegerProperty(attrObject, NanSymbol("uid"));
-  bool hasGid = HasIntegerProperty(attrObject, NanSymbol("gid"));
+  bool hasUid = HasIntegerProperty(attrObject, NanNew<v8::String>("uid"));
+  bool hasGid = HasIntegerProperty(attrObject, NanNew<v8::String>("gid"));
   if (hasUid || hasGid) {
     attr->flags |= SSH_FILEXFER_ATTR_UIDGID;
     if (hasUid)
-      attr->uid = GetIntegerProperty(attrObject, NanSymbol("uid"));
+      attr->uid = GetIntegerProperty(attrObject, NanNew<v8::String>("uid"));
     else
       attr->uid = 0;
     if (hasGid)
-      attr->gid = GetIntegerProperty(attrObject, NanSymbol("gid"));
+      attr->gid = GetIntegerProperty(attrObject, NanNew<v8::String>("gid"));
     else
       attr->gid = 0;
   }
 
-  if (HasStringProperty(attrObject, NanSymbol("owner"))) {
-    attr->owner = GetStringProperty(attrObject, NanSymbol("owner")); //TODO: free
+  if (HasStringProperty(attrObject, NanNew<v8::String>("owner"))) {
+    attr->owner = GetStringProperty(attrObject, NanNew<v8::String>("owner")); //TODO: free
     attr->flags |= SSH_FILEXFER_ATTR_OWNERGROUP;
   }
 
-  if (HasStringProperty(attrObject, NanSymbol("group"))) {
-    attr->group = GetStringProperty(attrObject, NanSymbol("group")); //TODO: free
+  if (HasStringProperty(attrObject, NanNew<v8::String>("group"))) {
+    attr->group = GetStringProperty(attrObject, NanNew<v8::String>("group")); //TODO: free
     attr->flags |= SSH_FILEXFER_ATTR_OWNERGROUP;
   }
 
-  bool hasCtime = HasIntegerProperty(attrObject, NanSymbol("ctime"));
-  bool hasMtime = HasIntegerProperty(attrObject, NanSymbol("mtime"));
-  bool hasAtime = HasIntegerProperty(attrObject, NanSymbol("atime"));
+  bool hasCtime = HasIntegerProperty(attrObject, NanNew<v8::String>("ctime"));
+  bool hasMtime = HasIntegerProperty(attrObject, NanNew<v8::String>("mtime"));
+  bool hasAtime = HasIntegerProperty(attrObject, NanNew<v8::String>("atime"));
   if (hasCtime || hasMtime || hasAtime) {
     attr->flags |= SSH_FILEXFER_ATTR_ACMODTIME;
     if (hasCtime) {
-      attr->createtime = GetIntegerProperty(attrObject, NanSymbol("ctime"));
+      attr->createtime = GetIntegerProperty(attrObject, NanNew<v8::String>("ctime"));
       attr->flags |= SSH_FILEXFER_ATTR_CREATETIME;
     } else
       attr->createtime = 0;
 
     if (hasMtime) {
-      attr->mtime64 = GetIntegerProperty(attrObject, NanSymbol("mtime"));
+      attr->mtime64 = GetIntegerProperty(attrObject, NanNew<v8::String>("mtime"));
       attr->mtime = attr->mtime64;
       attr->flags |= SSH_FILEXFER_ATTR_MODIFYTIME;
     } else {
@@ -442,8 +435,8 @@ sftp_attributes ObjectToAttributes (v8::Local<v8::Object> attrObject) {
       attr->mtime64 = 0;
     }
 
-    if (HasIntegerProperty(attrObject, NanSymbol("atime"))) {
-      attr->atime64 = GetIntegerProperty(attrObject, NanSymbol("atime"));
+    if (HasIntegerProperty(attrObject, NanNew<v8::String>("atime"))) {
+      attr->atime64 = GetIntegerProperty(attrObject, NanNew<v8::String>("atime"));
       attr->atime = attr->atime64;
       attr->flags |= SSH_FILEXFER_ATTR_ACCESSTIME;
     } else {
@@ -452,8 +445,8 @@ sftp_attributes ObjectToAttributes (v8::Local<v8::Object> attrObject) {
     }
   }
 
-  if (HasIntegerProperty(attrObject, NanSymbol("permissions"))) {
-    attr->permissions = GetIntegerProperty(attrObject, NanSymbol("permissions"));
+  if (HasIntegerProperty(attrObject, NanNew<v8::String>("permissions"))) {
+    attr->permissions = GetIntegerProperty(attrObject, NanNew<v8::String>("permissions"));
     attr->flags |= SSH_FILEXFER_ATTR_PERMISSIONS;
   }
 
@@ -474,20 +467,13 @@ NAN_METHOD(SftpMessage::New) {
 NAN_METHOD(SftpMessage::ReplyName) {
   NanScope();
 
-  char *s = NanFromV8String(
-      args[0].As<v8::Object>()
-    , Nan::UTF8
-    , NULL
-    , NULL
-    , 0
-    , v8::String::NO_OPTIONS
-  );
+  v8::String::Utf8Value s(args[0]);
 
   //TODO: async
   SftpMessage* m = node::ObjectWrap::Unwrap<SftpMessage>(args.This());
   sftp_reply_name(
       m->message
-    , s
+    , *s
     , args.Length() > 1 ? ObjectToAttributes(args[1]->ToObject()) : 0
   );
 
@@ -506,32 +492,18 @@ NAN_METHOD(SftpMessage::ReplyNames) {
 
     v8::Local<v8::Object> obj = array->Get(i).As<v8::Object>();
 
-    char *fname = NanFromV8String(
-        obj->Get(NanSymbol("filename")).As<v8::Object>()
-      , Nan::UTF8
-      , NULL
-      , NULL
-      , 0
-      , v8::String::NO_OPTIONS
-    );
-    char *lname = NanFromV8String(
-        obj->Get(NanSymbol("longname")).As<v8::Object>()
-      , Nan::UTF8
-      , NULL
-      , NULL
-      , 0
-      , v8::String::NO_OPTIONS
-    );
+    v8::String::Utf8Value fname(obj->Get(NanNew<v8::String>("filename")));
+    v8::String::Utf8Value lname(obj->Get(NanNew<v8::String>("longname")));
 
     if (NSSH_DEBUG)
-      std::cout << "Name [" << fname << "] [" << lname << "]\n";
+      std::cout << "Name [" << *fname << "] [" << *lname << "]\n";
 
     sftp_reply_names_add(
         m->message
-      , fname //TODO: free (I think?)
-      , lname //TODO: free (I think?)
-      , obj->Has(NanSymbol("attrs"))
-          ? ObjectToAttributes(obj->Get(NanSymbol("attrs")).As<v8::Object>())
+      , *fname //TODO: free (I think?)
+      , *lname //TODO: free (I think?)
+      , obj->Has(NanNew<v8::String>("attrs"))
+          ? ObjectToAttributes(obj->Get(NanNew<v8::String>("attrs")).As<v8::Object>())
           : 0
     );
   }
@@ -555,18 +527,11 @@ NAN_METHOD(SftpMessage::ReplyAttr) {
 NAN_METHOD(SftpMessage::ReplyHandle) {
   NanScope();
 
-  char *s = NanFromV8String(
-      args[0].As<v8::Object>()
-    , Nan::UTF8
-    , NULL
-    , NULL
-    , 0
-    , v8::String::NO_OPTIONS
-  );
+  v8::String::Utf8Value s(args[0]);
 
   //TODO: async
   SftpMessage* m = node::ObjectWrap::Unwrap<SftpMessage>(args.This());
-  sftp_reply_handle(m->message, ssh_string_from_char(s)); // free x 2
+  sftp_reply_handle(m->message, ssh_string_from_char(*s)); // free x 2
 
   NanReturnUndefined();
 }
@@ -580,20 +545,13 @@ NAN_METHOD(SftpMessage::ReplyStatus) {
     std::cout << "ReplyStatus: " << StringToStatusCode(args[0].As<v8::String>())
       << std::endl;
 
-  sftp_reply_status(
-      m->message
-    , StringToStatusCode(args[0].As<v8::String>())
-    , args.Length() > 1
-        ? NanFromV8String(
-              args[1].As<v8::Object>()
-            , Nan::UTF8
-            , NULL
-            , NULL
-            , 0
-            , v8::String::NO_OPTIONS
-          ) // free
-        : NULL
-  );
+  uint32_t status_code = StringToStatusCode(args[0].As<v8::String>());
+  if (args.Length() > 1) {
+    v8::String::Utf8Value s(args[1]);
+    sftp_reply_status(m->message, status_code, *s);
+  } else {
+    sftp_reply_status(m->message, status_code, NULL);
+  }
 
   NanReturnUndefined();
 }
