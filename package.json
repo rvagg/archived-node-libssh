@@ -15,14 +15,14 @@
   "main": "index.js",
   "dependencies": {
     "bindings": "*",
-    "nan": "^1.7.0"
+    "nan": "^1.8.4"
   },
   "devDependencies": {
     "tap": "*",
     "ssh2": "*",
     "bl": "*",
     "node-gyp": "~1.0.1",
-    "pty.js" :"git://github.com/chjj/pty.js.git"
+    "pty.js": "git://github.com/chjj/pty.js.git"
   },
   "repository": {
     "type": "git",
